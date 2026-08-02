@@ -1,0 +1,39 @@
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Aracın +X yönündeki ön tarafını gösteren tampon -->
+  <xacro:property name="front_marker_length" value="0.05"/>
+  <xacro:property name="front_marker_width" value="0.50"/>
+  <xacro:property name="front_marker_height" value="0.10"/>
+
+  <link name="front_marker_link">
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+
+      <geometry>
+        <box
+          size="${front_marker_length}
+                ${front_marker_width}
+                ${front_marker_height}"/>
+      </geometry>
+
+      <material name="yektemak_red"/>
+    </visual>
+
+  </link>
+
+  <joint name="front_marker_joint" type="fixed">
+
+    <parent link="base_link"/>
+    <child link="front_marker_link"/>
+
+    <origin
+      xyz="${base_length / 2.0 + front_marker_length / 2.0}
+           0
+           0"
+      rpy="0 0 0"/>
+
+  </joint>
+
+</robot>
+

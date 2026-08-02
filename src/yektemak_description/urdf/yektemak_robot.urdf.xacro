@@ -16,4 +16,7 @@
   <!-- Palet kaldırma platformu -->
   <xacro:include filename="yektemak_lift.xacro"/>
 
+  <!-- Ön yön işareti -->
+  <xacro:include filename="yektemak_markers.xacro"/>
+
 </robot>
