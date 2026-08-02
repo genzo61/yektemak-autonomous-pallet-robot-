@@ -7,6 +7,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 from launch.actions import RegisterEventHandler
 from launch.event_handlers import OnProcessExit
+from launch.actions import TimerAction
 
 def generate_launch_description():
     gazebo_package = FindPackageShare("gazebo_ros")
@@ -72,6 +73,14 @@ def generate_launch_description():
             "0.01",
         ],
     )
+    pallet_model_file = PathJoinSubstitution(
+        [
+            simulation_package,
+            "models",
+            "yektemak_pallet",
+            "model.sdf",
+        ]
+    )
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
@@ -109,6 +118,30 @@ def generate_launch_description():
             ],
         )
     )
+    spawn_pallet = Node(
+        package="gazebo_ros",
+        executable="spawn_entity.py",
+        name="spawn_yektemak_pallet",
+        output="screen",
+        arguments=[
+            "-file",
+            pallet_model_file,
+            "-entity",
+            "yektemak_pallet",
+            "-x",
+            "3.0",
+            "-y",
+            "0.0",
+            "-z",
+            "0.01",
+        ],
+    )
+    delayed_pallet_spawn = TimerAction(
+        period=3.0,
+        actions=[
+            spawn_pallet,
+        ],
+    )
 
     return LaunchDescription(
         [
@@ -116,5 +149,6 @@ def generate_launch_description():
             robot_state_publisher,
             spawn_robot,
             start_controllers_after_spawn,
+            delayed_pallet_spawn,
         ]
     )

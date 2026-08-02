@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+
+<sdf version="1.6">
+
+  <model name="yektemak_pallet">
+
+    <static>false</static>
+
+    <link name="pallet_link">
+
+      <pose>0 0 0.056 0 0 0</pose>
+
+      <inertial>
+        <mass>25.0</mass>
+
+        <inertia>
+          <ixx>1.36</ixx>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyy>3.03</iyy>
+          <iyz>0.0</iyz>
+          <izz>4.33</izz>
+        </inertia>
+      </inertial>
+
+      <!-- Sol alt taşıyıcı -->
+
+      <collision name="left_runner_collision">
+        <pose>0 0.30 -0.011 0 0 0</pose>
+
+        <geometry>
+          <box>
+            <size>1.20 0.10 0.09</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="left_runner_visual">
+        <pose>0 0.30 -0.011 0 0 0</pose>
+
+        <geometry>
+          <box>
+            <size>1.20 0.10 0.09</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>0.42 0.22 0.08 1</ambient>
+          <diffuse>0.55 0.30 0.10 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Orta alt taşıyıcı -->
+
+      <collision name="center_runner_collision">
+        <pose>0 0 -0.011 0 0 0</pose>
+
+        <geometry>
+          <box>
+            <size>1.20 0.10 0.09</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="center_runner_visual">
+        <pose>0 0 -0.011 0 0 0</pose>
+
+        <geometry>
+          <box>
+            <size>1.20 0.10 0.09</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>0.42 0.22 0.08 1</ambient>
+          <diffuse>0.55 0.30 0.10 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Sağ alt taşıyıcı -->
+
+      <collision name="right_runner_collision">
+        <pose>0 -0.30 -0.011 0 0 0</pose>
+
+        <geometry>
+          <box>
+            <size>1.20 0.10 0.09</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="right_runner_visual">
+        <pose>0 -0.30 -0.011 0 0 0</pose>
+
+        <geometry>
+          <box>
+            <size>1.20 0.10 0.09</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>0.42 0.22 0.08 1</ambient>
+          <diffuse>0.55 0.30 0.10 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Üst palet yüzeyi -->
+
+      <collision name="top_deck_collision">
+        <pose>0 0 0.045 0 0 0</pose>
+
+        <geometry>
+          <box>
+            <size>1.20 0.80 0.022</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="top_deck_visual">
+        <pose>0 0 0.045 0 0 0</pose>
+
+        <geometry>
+          <box>
+            <size>1.20 0.80 0.022</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>0.58 0.32 0.12 1</ambient>
+          <diffuse>0.72 0.43 0.18 1</diffuse>
+        </material>
+      </visual>
+
+    </link>
+
+  </model>
+
+</sdf>
