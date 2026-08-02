@@ -42,7 +42,28 @@
 
   <gazebo reference="front_marker_link">
     <material>Gazebo/Red</material>
+
   </gazebo>
+    <gazebo>
+    <plugin
+      name="yektemak_planar_move"
+      filename="libgazebo_ros_planar_move.so">
 
+      <ros>
+        <namespace>/</namespace>
+        <remapping>cmd_vel:=cmd_vel</remapping>
+        <remapping>odom:=odom</remapping>
+      </ros>
+
+      <update_rate>100.0</update_rate>
+      <publish_rate>50.0</publish_rate>
+
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>true</publish_odom_tf>
+
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+
+    </plugin>
+  </gazebo>
 </robot>
-
