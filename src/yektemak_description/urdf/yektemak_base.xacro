@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Temel gövde ölçüleri metre cinsindedir. -->
+  <xacro:property name="base_length" value="1.20"/>
+  <xacro:property name="base_width" value="0.80"/>
+  <xacro:property name="base_height" value="0.25"/>
+
+  <!-- Gövdenin yerden yüksekliği -->
+  <xacro:property name="base_ground_clearance" value="0.15"/>
+
+  <!-- Yaklaşık gövde kütlesi -->
+  <xacro:property name="base_mass" value="45.0"/>
+
+  <!-- Zemindeki referans noktası -->
+  <link name="base_footprint"/>
+
+  <!-- Robotun ana gövde bağlantısı -->
+  <link name="base_link">
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+
+      <geometry>
+        <box size="${base_length} ${base_width} ${base_height}"/>
+      </geometry>
+
+      <material name="yektemak_blue"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+
+      <geometry>
+        <box size="${base_length} ${base_width} ${base_height}"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+
+      <mass value="${base_mass}"/>
+
+      <inertia
+        ixx="${base_mass * (base_width * base_width + base_height * base_height) / 12.0}"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="${base_mass * (base_length * base_length + base_height * base_height) / 12.0}"
+        iyz="0.0"
+        izz="${base_mass * (base_length * base_length + base_width * base_width) / 12.0}"/>
+    </inertial>
+
+  </link>
+
+  <!-- base_footprint ile gövde arasındaki sabit bağlantı -->
+  <joint name="base_footprint_joint" type="fixed">
+
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+
+    <origin
+      xyz="0 0 ${base_ground_clearance + base_height / 2.0}"
+      rpy="0 0 0"/>
+
+  </joint>
+
+</robot>
