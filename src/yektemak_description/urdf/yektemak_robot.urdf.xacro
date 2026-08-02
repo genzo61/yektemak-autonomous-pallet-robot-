@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<robot
+  name="yektemak_robot"
+  xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Renk tanımları -->
+  <xacro:include filename="yektemak_materials.xacro"/>
+
+  <!-- Ana gövde -->
+  <xacro:include filename="yektemak_base.xacro"/>
+
+  <!-- Dört teker -->
+  <xacro:include filename="yektemak_wheels.xacro"/>
+
+</robot>

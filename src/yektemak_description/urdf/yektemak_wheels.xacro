@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Teker parametreleri -->
+  <xacro:property name="wheel_radius" value="0.18"/>
+  <xacro:property name="wheel_width" value="0.10"/>
+  <xacro:property name="wheel_mass" value="4.0"/>
+
+  <!-- Tekerlerin gövde üzerindeki konumları -->
+  <xacro:property name="wheel_x_position" value="0.42"/>
+
+  <xacro:property
+    name="wheel_y_position"
+    value="${base_width / 2.0 + wheel_width / 2.0}"/>
+
+  <!-- base_link merkezine göre teker merkezi -->
+  <xacro:property
+    name="wheel_z_position"
+    value="${wheel_radius - (base_ground_clearance + base_height / 2.0)}"/>
+
+  <!-- Tek bir teker oluşturan makro -->
+  <xacro:macro name="yektemak_wheel" params="wheel_name x_position y_position">
+
+    <link name="${wheel_name}_wheel_link">
+
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi / 2.0} 0 0"/>
+
+        <geometry>
+          <cylinder
+            radius="${wheel_radius}"
+            length="${wheel_width}"/>
+        </geometry>
+
+        <material name="yektemak_dark"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi / 2.0} 0 0"/>
+
+        <geometry>
+          <cylinder
+            radius="${wheel_radius}"
+            length="${wheel_width}"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+
+        <mass value="${wheel_mass}"/>
+
+        <inertia
+          ixx="${wheel_mass * (3.0 * wheel_radius * wheel_radius + wheel_width * wheel_width) / 12.0}"
+          ixy="0.0"
+          ixz="0.0"
+          iyy="${wheel_mass * wheel_radius * wheel_radius / 2.0}"
+          iyz="0.0"
+          izz="${wheel_mass * (3.0 * wheel_radius * wheel_radius + wheel_width * wheel_width) / 12.0}"/>
+      </inertial>
+
+    </link>
+
+    <joint name="${wheel_name}_wheel_joint" type="continuous">
+
+      <parent link="base_link"/>
+      <child link="${wheel_name}_wheel_link"/>
+
+      <origin
+        xyz="${x_position} ${y_position} ${wheel_z_position}"
+        rpy="0 0 0"/>
+
+      <axis xyz="0 1 0"/>
+
+      <dynamics damping="0.1" friction="0.1"/>
+
+    </joint>
+
+  </xacro:macro>
+
+  <!-- Ön sol teker -->
+  <xacro:yektemak_wheel
+    wheel_name="front_left"
+    x_position="${wheel_x_position}"
+    y_position="${wheel_y_position}"/>
+
+  <!-- Ön sağ teker -->
+  <xacro:yektemak_wheel
+    wheel_name="front_right"
+    x_position="${wheel_x_position}"
+    y_position="${-wheel_y_position}"/>
+
+  <!-- Arka sol teker -->
+  <xacro:yektemak_wheel
+    wheel_name="rear_left"
+    x_position="${-wheel_x_position}"
+    y_position="${wheel_y_position}"/>
+
+  <!-- Arka sağ teker -->
+  <xacro:yektemak_wheel
+    wheel_name="rear_right"
+    x_position="${-wheel_x_position}"
+    y_position="${-wheel_y_position}"/>
+
+</robot>
