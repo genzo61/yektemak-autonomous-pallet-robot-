@@ -1,0 +1,23 @@
+velocity_smoother:
+  ros__parameters:
+    use_sim_time: true
+
+    smoothing_frequency: 30.0
+    scale_velocities: true
+    feedback: "OPEN_LOOP"
+
+    # [ileri-geri, yengeç, dönüş]
+    max_velocity: [0.20, 0.20, 0.80]
+    min_velocity: [-0.20, -0.20, -0.80]
+
+    # Yüklü palet taşırken yumuşak kalkış
+    max_accel: [0.12, 0.12, 0.40]
+    max_decel: [-0.18, -0.18, -0.60]
+
+    deadband_velocity: [0.0, 0.0, 0.0]
+    velocity_timeout: 0.5
+
+    odom_topic: "odom"
+    odom_duration: 0.1
+
+    enable_stamped_cmd_vel: false
