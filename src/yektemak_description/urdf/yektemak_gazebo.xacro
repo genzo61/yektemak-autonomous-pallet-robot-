@@ -38,6 +38,15 @@
 
   <gazebo reference="lift_platform_link">
     <material>Gazebo/Yellow</material>
+
+    <mu1>10.0</mu1>
+    <mu2>10.0</mu2>
+
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+
+    <minDepth>0.001</minDepth>
+    <maxVel>0.01</maxVel>
   </gazebo>
 
   <gazebo reference="front_marker_link">

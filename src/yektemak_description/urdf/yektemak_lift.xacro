@@ -3,13 +3,13 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- Kaldırma platformu ölçüleri -->
-  <xacro:property name="lift_platform_length" value="0.90"/>
-  <xacro:property name="lift_platform_width" value="0.60"/>
-  <xacro:property name="lift_platform_height" value="0.05"/>
+  <xacro:property name="lift_platform_length" value="0.68"/>
+  <xacro:property name="lift_platform_width" value="0.30"/>
+  <xacro:property name="lift_platform_height" value="0.04"/>
 
-  <xacro:property name="lift_platform_mass" value="8.0"/>
-  <xacro:property name="lift_platform_clearance" value="0.02"/>
-  <xacro:property name="lift_max_height" value="0.20"/>
+  <xacro:property name="lift_platform_mass" value="6.0"/>
+  <xacro:property name="lift_platform_clearance" value="0.01"/>
+  <xacro:property name="lift_max_height" value="0.10"/>
 
   <!-- Paleti kaldıracak üst platform -->
   <link name="lift_platform_link">
@@ -77,7 +77,7 @@
     <limit
       lower="0.0"
       upper="${lift_max_height}"
-      effort="2000.0"
+      effort="5000.0"
       velocity="0.10"/>
 
     <dynamics
