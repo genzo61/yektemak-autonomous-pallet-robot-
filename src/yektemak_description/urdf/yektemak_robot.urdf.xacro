@@ -13,4 +13,7 @@
   <!-- Dört teker -->
   <xacro:include filename="yektemak_wheels.xacro"/>
 
+  <!-- Palet kaldırma platformu -->
+  <xacro:include filename="yektemak_lift.xacro"/>
+
 </robot>
