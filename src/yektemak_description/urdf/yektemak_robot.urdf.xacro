@@ -19,7 +19,9 @@
   <!-- Ön yön işareti -->
   <xacro:include filename="yektemak_markers.xacro"/>
 
-    <!-- Gazebo fizik ve görünüm ayarları -->
-  <xacro:include filename="yektemak_gazebo.xacro"/>
+  <!-- Kaldırma sistemi ROS 2 Control arayüzü -->
+  <xacro:include filename="yektemak_ros2_control.xacro"/>
 
+  <!-- Gazebo fizik ve görünüm ayarları -->
+  <xacro:include filename="yektemak_gazebo.xacro"/>
 </robot>

@@ -5,7 +5,8 @@ from launch.substitutions import Command, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
-
+from launch.actions import RegisterEventHandler
+from launch.event_handlers import OnProcessExit
 
 def generate_launch_description():
     gazebo_package = FindPackageShare("gazebo_ros")
@@ -71,11 +72,49 @@ def generate_launch_description():
             "0.01",
         ],
     )
+    joint_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        name="joint_state_broadcaster_spawner",
+        output="screen",
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager",
+            "/controller_manager",
+            "--controller-manager-timeout",
+            "60",
+        ],
+    )
+
+    lift_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        name="lift_position_controller_spawner",
+        output="screen",
+        arguments=[
+            "lift_position_controller",
+            "--controller-manager",
+            "/controller_manager",
+            "--controller-manager-timeout",
+            "60",
+        ],
+    )
+
+    start_controllers_after_spawn = RegisterEventHandler(
+        OnProcessExit(
+            target_action=spawn_robot,
+            on_exit=[
+                joint_state_broadcaster_spawner,
+                lift_controller_spawner,
+            ],
+        )
+    )
 
     return LaunchDescription(
         [
             gazebo,
             robot_state_publisher,
             spawn_robot,
+            start_controllers_after_spawn,
         ]
     )

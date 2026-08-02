@@ -1,0 +1,27 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+    use_sim_time: true
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    lift_position_controller:
+      type: position_controllers/JointGroupPositionController
+
+
+lift_position_controller:
+  ros__parameters:
+    joints:
+      - lift_platform_joint
+
+
+gazebo_ros2_control:
+  ros__parameters:
+    pid_gains:
+      position:
+        lift_platform_joint:
+          kp: 800.0
+          ki: 0.0
+          kd: 50.0
+          max_integral_error: 100.0
