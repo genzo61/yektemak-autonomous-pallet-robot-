@@ -1,5 +1,6 @@
+import os
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -14,12 +15,23 @@ def generate_launch_description():
     description_package = FindPackageShare("yektemak_description")
     simulation_package = FindPackageShare("yektemak_gazebo")
 
+    gazebo_model_path = SetEnvironmentVariable(
+        name="GAZEBO_MODEL_PATH",
+        value=[
+            PathJoinSubstitution(
+                [simulation_package, "models"]
+            ),
+            os.pathsep,
+            os.environ.get("GAZEBO_MODEL_PATH", ""),
+        ],
+    )
+
     gazebo_launch_file = PathJoinSubstitution(
         [gazebo_package, "launch", "gazebo.launch.py"]
     )
 
     world_file = PathJoinSubstitution(
-        [simulation_package, "worlds", "empty.world"]
+        [simulation_package, "worlds", "factory.world"]
     )
 
     robot_xacro_file = PathJoinSubstitution(
@@ -145,6 +157,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            gazebo_model_path,
             gazebo,
             robot_state_publisher,
             spawn_robot,

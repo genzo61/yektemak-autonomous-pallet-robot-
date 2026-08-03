@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+
+<sdf version="1.6">
+
+  <world name="yektemak_factory_world">
+
+    <gravity>0 0 -9.81</gravity>
+
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <scene>
+      <ambient>0.45 0.45 0.45 1</ambient>
+      <background>0.70 0.75 0.80 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Sol taraftaki metal raflar -->
+    <include>
+      <uri>model://yektemak_warehouse_rack</uri>
+      <name>rack_left_01</name>
+      <pose>1.5 3.4 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://yektemak_warehouse_rack</uri>
+      <name>rack_left_02</name>
+      <pose>6.0 3.4 0 0 0 0</pose>
+    </include>
+
+    <!-- Sağ taraftaki metal raflar -->
+    <include>
+      <uri>model://yektemak_warehouse_rack</uri>
+      <name>rack_right_01</name>
+      <pose>1.5 -3.4 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://yektemak_warehouse_rack</uri>
+      <name>rack_right_02</name>
+      <pose>6.0 -3.4 0 0 0 0</pose>
+    </include>
+
+    <gui fullscreen="0">
+      <camera name="factory_camera">
+        <pose>-5 -10 7 0 0.42 0.70</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+
+  </world>
+
+</sdf>
