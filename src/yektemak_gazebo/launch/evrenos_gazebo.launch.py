@@ -10,6 +10,9 @@ from launch.substitutions import Command
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+from launch.conditions import IfCondition
 
 def generate_launch_description():
 
@@ -25,6 +28,20 @@ def generate_launch_description():
     # -----------------------------------------------------
     # Files
     # -----------------------------------------------------
+
+    slam_arg = DeclareLaunchArgument(
+        "slam",
+        default_value="true",
+    )
+
+    slam_enabled = LaunchConfiguration("slam")
+
+    rviz_arg = DeclareLaunchArgument(
+        "rviz",
+        default_value="true",
+    )
+
+    rviz_enabled = LaunchConfiguration("rviz")
 
     xacro_file = os.path.join(
         description_share,
@@ -206,6 +223,7 @@ def generate_launch_description():
         executable="async_slam_toolbox_node",
         name="slam_toolbox",
         output="screen",
+        condition=IfCondition(slam_enabled),
         parameters=[
             slam_config,
             {
@@ -223,16 +241,9 @@ def generate_launch_description():
         package="rviz2",
         executable="rviz2",
         name="evrenos_rviz",
-        output="screen",
-        arguments=[
-            "-d",
-            rviz_config,
-        ],
-        parameters=[
-            {
-                "use_sim_time": True,
-            }
-        ],
+        arguments=["-d", rviz_config],
+        parameters=[{"use_sim_time": True}],
+        condition=IfCondition(rviz_enabled),
     )
     
     moving_obstacle_node = Node(
@@ -253,6 +264,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            slam_arg,
             gazebo,
             robot_state_publisher,
             spawn_evrenos,
@@ -260,6 +272,7 @@ def generate_launch_description():
             pointcloud_to_laserscan,
             slam_node,
             rviz_node,
+            rviz_arg,
             #moving_obstacle_node,
         ]
     )
