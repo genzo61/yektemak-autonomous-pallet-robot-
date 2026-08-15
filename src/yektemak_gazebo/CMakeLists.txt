@@ -2,16 +2,26 @@ cmake_minimum_required(VERSION 3.10)
 
 project(yektemak_gazebo)
 
-
 find_package(ament_cmake REQUIRED)
 
 
+# Launch, world, config ve RViz dosyaları
 install(
   DIRECTORY
     launch
     worlds
     config
+    rviz
   DESTINATION share/${PROJECT_NAME}
+)
+
+
+# Çalıştırılabilir Python node'ları
+install(
+  PROGRAMS
+    scripts/evrenos_moving_obstacle.py
+    scripts/evrenos_manual_drive.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 

@@ -1,0 +1,456 @@
+<?xml version="1.0"?>
+
+<sdf version="1.6">
+
+  <world name="evrenos_competition_world">
+
+    <!-- ================================================= -->
+    <!-- PHYSICS                                           -->
+    <!-- ================================================= -->
+
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+
+    <!-- ================================================= -->
+    <!-- START GATE                                        -->
+    <!-- ================================================= -->
+
+    <model name="start_left">
+      <static>true</static>
+      <pose>1 1.8 0.75 0 0 0</pose>
+
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.20 0.20 1.50</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.20 0.20 1.50</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+
+    <model name="start_right">
+      <static>true</static>
+      <pose>1 -1.8 0.75 0 0 0</pose>
+
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.20 0.20 1.50</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.20 0.20 1.50</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- ================================================= -->
+    <!-- CONE SECTION                                      -->
+    <!-- x = 4 .. 9                                        -->
+    <!-- ================================================= -->
+
+    <model name="cone_l1">
+      <static>true</static>
+      <pose>4 1.2 0.30 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.18</radius>
+              <length>0.60</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.18</radius>
+              <length>0.60</length>
+            </cylinder>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cone_r1">
+      <static>true</static>
+      <pose>4 -1.2 0.30 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.18</radius>
+              <length>0.60</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.18</radius>
+              <length>0.60</length>
+            </cylinder>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cone_l2">
+      <static>true</static>
+      <pose>6 0.9 0.30 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.18</radius>
+              <length>0.60</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.18</radius>
+              <length>0.60</length>
+            </cylinder>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cone_r2">
+      <static>true</static>
+      <pose>6 -1.4 0.30 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.18</radius>
+              <length>0.60</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.18</radius>
+              <length>0.60</length>
+            </cylinder>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cone_l3">
+      <static>true</static>
+      <pose>8 1.4 0.30 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.18</radius>
+              <length>0.60</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.18</radius>
+              <length>0.60</length>
+            </cylinder>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="cone_r3">
+      <static>true</static>
+      <pose>8 -0.9 0.30 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.18</radius>
+              <length>0.60</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.18</radius>
+              <length>0.60</length>
+            </cylinder>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- ================================================= -->
+    <!-- VERTICAL OBSTACLE                                 -->
+    <!-- ================================================= -->
+
+    <model name="vertical_obstacle">
+      <static>true</static>
+
+      <pose>11 0 0.075 0 0 0</pose>
+
+      <link name="link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.60 3.0 0.15</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.60 3.0 0.15</size>
+            </box>
+          </geometry>
+        </visual>
+
+      </link>
+    </model>
+
+
+    <!-- ================================================= -->
+    <!-- WATER SECTION                                     -->
+    <!-- Visual only for now                               -->
+    <!-- ================================================= -->
+
+    <model name="water_zone">
+      <static>true</static>
+
+      <pose>14 0 0.01 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+            <box>
+              <size>4.0 4.0 0.02</size>
+            </box>
+          </geometry>
+
+          <material>
+            <ambient>0.05 0.2 0.8 0.65</ambient>
+            <diffuse>0.05 0.2 0.8 0.65</diffuse>
+          </material>
+
+        </visual>
+
+      </link>
+    </model>
+
+
+    <!-- ================================================= -->
+    <!-- ROUGH TERRAIN                                     -->
+    <!-- ================================================= -->
+
+    <model name="rough_1">
+      <static>true</static>
+      <pose>18 -0.8 0.04 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>0.8 0.8 0.08</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.8 0.8 0.08</size></box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="rough_2">
+      <static>true</static>
+      <pose>19 0.6 0.06 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>0.9 0.9 0.12</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.9 0.9 0.12</size></box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="rough_3">
+      <static>true</static>
+      <pose>20 -0.4 0.05 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>0.7 1.0 0.10</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.7 1.0 0.10</size></box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- ================================================= -->
+    <!-- UPHILL RAMP                                       -->
+    <!-- ================================================= -->
+
+    <model name="slope">
+
+      <static>true</static>
+
+      <!-- ~10 degree incline -->
+      <pose>23 0 0.43 0 -0.1745 0</pose>
+
+      <link name="link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>4.0 3.0 0.15</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>4.0 3.0 0.15</size>
+            </box>
+          </geometry>
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <!-- ================================================= -->
+    <!-- ACCELERATION CORRIDOR                             -->
+    <!-- ================================================= -->
+
+    <model name="accel_left_wall">
+      <static>true</static>
+
+      <pose>31 2.0 0.25 0 0 0</pose>
+
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>10 0.15 0.5</size></box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box><size>10 0.15 0.5</size></box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+
+    <model name="accel_right_wall">
+      <static>true</static>
+
+      <pose>31 -2.0 0.25 0 0 0</pose>
+
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>10 0.15 0.5</size></box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box><size>10 0.15 0.5</size></box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- ================================================= -->
+    <!-- TARGET AREA                                       -->
+    <!-- ================================================= -->
+
+    <model name="target_wall">
+
+      <static>true</static>
+
+      <pose>38 0 1.0 0 0 0</pose>
+
+      <link name="link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.15 3.0 2.0</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.15 3.0 2.0</size>
+            </box>
+          </geometry>
+        </visual>
+
+      </link>
+
+    </model>
+
+
+  </world>
+
+</sdf>
+

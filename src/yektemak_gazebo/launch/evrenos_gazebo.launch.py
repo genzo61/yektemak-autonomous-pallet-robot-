@@ -35,13 +35,31 @@ def generate_launch_description():
     world_file = os.path.join(
         simulation_share,
         "worlds",
-        "evrenos_test.world",
+        "evrenos_competition.world",
     )
 
     ekf_config = os.path.join(
         simulation_share,
         "config",
         "evrenos_ekf.yaml",
+    )
+
+    pointcloud_to_scan_config = os.path.join(
+        simulation_share,
+        "config",
+        "evrenos_pointcloud_to_scan.yaml",
+    )
+
+    slam_config = os.path.join(
+        simulation_share,
+        "config",
+        "evrenos_slam.yaml",
+    )
+
+    rviz_config = os.path.join(
+        simulation_share,
+        "rviz",
+        "evrenos_slam.rviz",
     )
 
     # -----------------------------------------------------
@@ -122,17 +140,20 @@ def generate_launch_description():
             "-topic",
             "robot_description",
 
+            # TEKNOFEST ana parkur başlangıcı
             "-x",
-            "0.0",
+            "9.2",
 
             "-y",
-            "0.0",
+            "-8.0",
 
+            # Biraz yukarıda doğsun, fizik ile zemine otursun
             "-z",
-            "0.05",
+            "0.03",
 
+            # Robotun +X önü parkur boyunca sola (-X) baksın
             "-Y",
-            "0.0",
+            "3.14159265",
         ],
     )
 
@@ -153,6 +174,79 @@ def generate_launch_description():
         ],
     )
 
+        # -----------------------------------------------------
+    # PointCloud2 -> LaserScan
+    # -----------------------------------------------------
+
+    pointcloud_to_laserscan = Node(
+        package="pointcloud_to_laserscan",
+        executable="pointcloud_to_laserscan_node",
+        name="pointcloud_to_laserscan",
+        output="screen",
+
+        remappings=[
+            ("cloud_in", "/points"),
+            ("scan", "/scan"),
+        ],
+
+        parameters=[
+            pointcloud_to_scan_config,
+            {
+                "use_sim_time": True,
+            },
+        ],
+    )
+
+        # -----------------------------------------------------
+    # SLAM TOOLBOX
+    # -----------------------------------------------------
+
+    slam_node = Node(
+        package="slam_toolbox",
+        executable="async_slam_toolbox_node",
+        name="slam_toolbox",
+        output="screen",
+        parameters=[
+            slam_config,
+            {
+                "use_sim_time": True,
+            },
+        ],
+    )
+
+
+    # -----------------------------------------------------
+    # RVIZ
+    # -----------------------------------------------------
+
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="evrenos_rviz",
+        output="screen",
+        arguments=[
+            "-d",
+            rviz_config,
+        ],
+        parameters=[
+            {
+                "use_sim_time": True,
+            }
+        ],
+    )
+    
+    moving_obstacle_node = Node(
+        package="yektemak_gazebo",
+        executable="evrenos_moving_obstacle.py",
+        name="evrenos_sliding_obstacle",
+        output="screen",
+        parameters=[
+            {
+                "use_sim_time": True,
+            }
+        ],
+    )   
+    
     # -----------------------------------------------------
     # Launch
     # -----------------------------------------------------
@@ -163,5 +257,9 @@ def generate_launch_description():
             robot_state_publisher,
             spawn_evrenos,
             ekf_node,
+            pointcloud_to_laserscan,
+            slam_node,
+            rviz_node,
+            #moving_obstacle_node,
         ]
     )
