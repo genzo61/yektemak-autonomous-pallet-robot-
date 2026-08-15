@@ -38,6 +38,11 @@ def generate_launch_description():
         "evrenos_test.world",
     )
 
+    ekf_config = os.path.join(
+        simulation_share,
+        "config",
+        "evrenos_ekf.yaml",
+    )
 
     # -----------------------------------------------------
     # Robot description
@@ -131,6 +136,22 @@ def generate_launch_description():
         ],
     )
 
+        # -----------------------------------------------------
+    # EKF Localization
+    # -----------------------------------------------------
+
+    ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[
+            ekf_config,
+            {
+                "use_sim_time": True,
+            },
+        ],
+    )
 
     # -----------------------------------------------------
     # Launch
@@ -141,5 +162,6 @@ def generate_launch_description():
             gazebo,
             robot_state_publisher,
             spawn_evrenos,
+            ekf_node,
         ]
     )
