@@ -1,0 +1,163 @@
+<?xml version="1.0" ?>
+
+<sdf version="1.6">
+
+  <world name="evrenos_test_world">
+
+    <!-- Physics -->
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000.0</real_time_update_rate>
+    </physics>
+
+
+    <!-- Sun -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+
+    <!-- Ground -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+
+    <!-- ================================================= -->
+    <!-- FRONT WALL                                        -->
+    <!-- ================================================= -->
+
+    <model name="front_wall">
+
+      <static>true</static>
+
+      <pose>5.0 0.0 0.75 0 0 0</pose>
+
+      <link name="link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.20 6.0 1.50</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.20 6.0 1.50</size>
+            </box>
+          </geometry>
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <!-- ================================================= -->
+    <!-- LEFT OBSTACLE                                     -->
+    <!-- ================================================= -->
+
+    <model name="left_box">
+
+      <static>true</static>
+
+      <pose>2.5 2.0 0.50 0 0 0</pose>
+
+      <link name="link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1.0 1.0 1.0</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.0 1.0 1.0</size>
+            </box>
+          </geometry>
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <!-- ================================================= -->
+    <!-- RIGHT OBSTACLE                                    -->
+    <!-- ================================================= -->
+
+    <model name="right_box">
+
+      <static>true</static>
+
+      <pose>3.0 -2.0 0.75 0 0 0</pose>
+
+      <link name="link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1.0 1.0 1.50</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.0 1.0 1.50</size>
+            </box>
+          </geometry>
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <!-- ================================================= -->
+    <!-- CENTER SMALL OBSTACLE                             -->
+    <!-- ================================================= -->
+
+    <model name="center_box">
+
+      <static>true</static>
+
+      <pose>2.0 0.0 0.30 0 0 0</pose>
+
+      <link name="link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.60 0.60 0.60</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.60 0.60 0.60</size>
+            </box>
+          </geometry>
+        </visual>
+
+      </link>
+
+    </model>
+
+
+  </world>
+
+</sdf>
+
+

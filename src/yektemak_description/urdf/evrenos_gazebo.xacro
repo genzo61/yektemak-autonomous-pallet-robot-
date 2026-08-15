@@ -111,5 +111,190 @@
 
   </gazebo>
 
+      <!-- ====================================================== -->
+  <!-- PRESERVE SENSOR FIXED JOINTS                           -->
+  <!-- ====================================================== -->
+
+  <gazebo reference="lidar_link">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
+  <gazebo reference="imu_link">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
+  <gazebo reference="camera_link">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
+  <gazebo reference="gps_link">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
+
+  <!-- ====================================================== -->
+  <!-- SIMULATED 3D LIDAR                                    -->
+  <!-- Approximation of Unitree 4D LiDAR for autonomy tests  -->
+  <!-- ====================================================== -->
+
+  <gazebo reference="lidar_link">
+
+    <sensor name="evrenos_3d_lidar" type="ray">
+
+      <always_on>true</always_on>
+      <visualize>true</visualize>
+
+      <!-- Keep simulation light for now -->
+      <update_rate>10.0</update_rate>
+
+      <pose>0 0 0 0 0 0</pose>
+
+      <ray>
+
+        <scan>
+
+          <!-- 360 degree horizontal scan -->
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159265</min_angle>
+            <max_angle>3.14159265</max_angle>
+          </horizontal>
+
+          <!-- Simplified vertical field -->
+          <vertical>
+            <samples>16</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.261799</min_angle>
+            <max_angle>0.261799</max_angle>
+          </vertical>
+
+        </scan>
+
+        <range>
+          <min>0.20</min>
+          <max>30.0</max>
+          <resolution>0.01</resolution>
+        </range>
+
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+
+      </ray>
+
+
+      <plugin
+        name="evrenos_lidar_plugin"
+        filename="libgazebo_ros_ray_sensor.so">
+
+        <ros>
+          <namespace>/</namespace>
+          <remapping>~/out:=points</remapping>
+        </ros>
+
+        <output_type>sensor_msgs/PointCloud2</output_type>
+
+        <frame_name>lidar_link</frame_name>
+
+      </plugin>
+
+    </sensor>
+
+  </gazebo>
+
+
+  <!-- ====================================================== -->
+  <!-- SIMULATED BNO055-LIKE IMU                             -->
+  <!-- ====================================================== -->
+
+  <gazebo reference="imu_link">
+
+    <sensor name="evrenos_imu_sensor" type="imu">
+
+      <always_on>true</always_on>
+
+      <update_rate>100.0</update_rate>
+
+      <visualize>false</visualize>
+
+      <pose>0 0 0 0 0 0</pose>
+
+
+      <imu>
+
+        <angular_velocity>
+
+          <x>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.002</stddev>
+            </noise>
+          </x>
+
+          <y>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.002</stddev>
+            </noise>
+          </y>
+
+          <z>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.002</stddev>
+            </noise>
+          </z>
+
+        </angular_velocity>
+
+
+        <linear_acceleration>
+
+          <x>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.02</stddev>
+            </noise>
+          </x>
+
+          <y>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.02</stddev>
+            </noise>
+          </y>
+
+          <z>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.02</stddev>
+            </noise>
+          </z>
+
+        </linear_acceleration>
+
+      </imu>
+
+
+      <plugin
+        name="evrenos_imu_plugin"
+        filename="libgazebo_ros_imu_sensor.so">
+
+        <ros>
+          <namespace>/</namespace>
+          <remapping>~/out:=imu/data</remapping>
+        </ros>
+
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+
+      </plugin>
+
+    </sensor>
+
+  </gazebo>
+
 </robot>
 
