@@ -15,4 +15,7 @@
   <!-- Sensors -->
   <xacro:include filename="evrenos_sensors.xacro"/>
 
+    <!-- Gazebo physics and drive -->
+  <xacro:include filename="evrenos_gazebo.xacro"/>
+
 </robot>
