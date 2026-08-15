@@ -1,4 +1,4 @@
-image: evrenos_competition_checkpoint_01.pgm
+image: evrenos_competition_checkpoint_01_rebuild.pgm
 mode: trinary
 resolution: 0.05
 origin: [-32.1, -7.21, 0]
