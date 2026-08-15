@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- KTR wheel dimensions -->
+  <xacro:property name="wheel_radius" value="0.225"/>
+  <xacro:property name="wheel_width"  value="0.13"/>
+  <xacro:property name="wheel_mass"   value="4.0"/>
+
+  <!--
+    Temporary geometry derived from overall vehicle dimensions.
+
+    Overall length = 1.39 m
+    Wheel diameter = 0.45 m
+
+    wheelbase ~= 1.39 - 0.45 = 0.94 m
+  -->
+  <xacro:property name="wheelbase" value="0.94"/>
+
+  <!--
+    Overall width = 1.195 m
+    wheel width   = 0.13 m
+
+    Track center distance:
+      1.195 - 0.13 = 1.065 m
+  -->
+  <xacro:property name="track_width" value="1.065"/>
+
+  <xacro:property
+    name="wheel_x_position"
+    value="${wheelbase / 2.0}"/>
+
+  <xacro:property
+    name="wheel_y_position"
+    value="${track_width / 2.0}"/>
+
+  <!--
+    base_link center is:
+      base_ground_clearance + base_height / 2
+
+    Wheel center is wheel_radius from ground.
+  -->
+  <xacro:property
+    name="wheel_z_position"
+    value="${wheel_radius - (base_ground_clearance + base_height / 2.0)}"/>
+
+
+  <!-- One EVRENOS wheel -->
+  <xacro:macro
+    name="evrenos_wheel"
+    params="wheel_name x_position y_position">
+
+    <link name="${wheel_name}_wheel_link">
+
+      <visual>
+
+        <!-- Cylinder native axis is Z.
+             Rotate 90 deg around X to align with vehicle Y axis. -->
+        <origin xyz="0 0 0" rpy="${pi / 2.0} 0 0"/>
+
+        <geometry>
+          <cylinder
+            radius="${wheel_radius}"
+            length="${wheel_width}"/>
+        </geometry>
+
+        <material name="evrenos_dark"/>
+
+      </visual>
+
+
+      <collision>
+
+        <origin xyz="0 0 0" rpy="${pi / 2.0} 0 0"/>
+
+        <geometry>
+          <cylinder
+            radius="${wheel_radius}"
+            length="${wheel_width}"/>
+        </geometry>
+
+      </collision>
+
+
+      <inertial>
+
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+
+        <mass value="${wheel_mass}"/>
+
+        <inertia
+          ixx="${wheel_mass * (3.0 * wheel_radius * wheel_radius + wheel_width * wheel_width) / 12.0}"
+          ixy="0.0"
+          ixz="0.0"
+          iyy="${wheel_mass * wheel_radius * wheel_radius / 2.0}"
+          iyz="0.0"
+          izz="${wheel_mass * (3.0 * wheel_radius * wheel_radius + wheel_width * wheel_width) / 12.0}"/>
+
+      </inertial>
+
+    </link>
+
+
+    <joint
+      name="${wheel_name}_wheel_joint"
+      type="continuous">
+
+      <parent link="base_link"/>
+      <child link="${wheel_name}_wheel_link"/>
+
+      <origin
+        xyz="${x_position} ${y_position} ${wheel_z_position}"
+        rpy="0 0 0"/>
+
+      <axis xyz="0 1 0"/>
+
+      <dynamics
+        damping="0.1"
+        friction="0.1"/>
+
+    </joint>
+
+  </xacro:macro>
+
+
+  <!-- FRONT LEFT -->
+  <xacro:evrenos_wheel
+    wheel_name="front_left"
+    x_position="${wheel_x_position}"
+    y_position="${wheel_y_position}"/>
+
+
+  <!-- FRONT RIGHT -->
+  <xacro:evrenos_wheel
+    wheel_name="front_right"
+    x_position="${wheel_x_position}"
+    y_position="${-wheel_y_position}"/>
+
+
+  <!-- REAR LEFT -->
+  <xacro:evrenos_wheel
+    wheel_name="rear_left"
+    x_position="${-wheel_x_position}"
+    y_position="${wheel_y_position}"/>
+
+
+  <!-- REAR RIGHT -->
+  <xacro:evrenos_wheel
+    wheel_name="rear_right"
+    x_position="${-wheel_x_position}"
+    y_position="${-wheel_y_position}"/>
+
+</robot>
+

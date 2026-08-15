@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<robot
+  name="evrenos_evr03"
+  xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="evrenos_materials.xacro"/>
+
+  <xacro:include filename="evrenos_base.xacro"/>
+
+  <xacro:include filename="evrenos_body.xacro"/>
+
+  <xacro:include filename="evrenos_wheels.xacro"/>
+
+  <!-- Sensors -->
+  <xacro:include filename="evrenos_sensors.xacro"/>
+
+</robot>

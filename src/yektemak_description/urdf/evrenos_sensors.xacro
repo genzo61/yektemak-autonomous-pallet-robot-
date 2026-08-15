@@ -1,0 +1,162 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    EVRENOS sensor frame layout
+
+    IMPORTANT:
+    Positions are initial simulation approximations.
+
+    +X = Front
+    +Y = Left
+    +Z = Up
+
+    Real CAD measurements can replace these later.
+  -->
+
+
+  <!-- ====================================================== -->
+  <!-- UNITREE 4D LIDAR L1                                    -->
+  <!-- ====================================================== -->
+
+  <link name="lidar_link">
+
+    <visual>
+      <origin xyz="0 0 0.035" rpy="0 0 0"/>
+
+      <geometry>
+        <cylinder radius="0.055" length="0.07"/>
+      </geometry>
+
+      <material name="evrenos_sensor"/>
+    </visual>
+
+  </link>
+
+  <joint name="lidar_joint" type="fixed">
+
+    <parent link="body_link"/>
+    <child link="lidar_link"/>
+
+    <!-- Upper/front portion of vehicle -->
+    <origin
+      xyz="0.12 0 0.31"
+      rpy="0 0 0"/>
+
+  </joint>
+
+
+  <!-- ====================================================== -->
+  <!-- INTEL REALSENSE CAMERA                                 -->
+  <!-- ====================================================== -->
+
+  <link name="camera_link">
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+
+      <geometry>
+        <box size="0.035 0.12 0.035"/>
+      </geometry>
+
+      <material name="evrenos_dark"/>
+    </visual>
+
+  </link>
+
+  <joint name="camera_joint" type="fixed">
+
+    <parent link="body_link"/>
+    <child link="camera_link"/>
+
+    <!-- Front facing camera -->
+    <origin
+      xyz="0.48 0 0.14"
+      rpy="0 0 0"/>
+
+  </joint>
+
+
+  <!-- ROS optical frame convention -->
+  <link name="camera_optical_frame"/>
+
+  <joint name="camera_optical_joint" type="fixed">
+
+    <parent link="camera_link"/>
+    <child link="camera_optical_frame"/>
+
+    <origin
+      xyz="0 0 0"
+      rpy="${-pi/2.0} 0 ${-pi/2.0}"/>
+
+  </joint>
+
+
+  <!-- ====================================================== -->
+  <!-- BNO055 IMU                                             -->
+  <!-- ====================================================== -->
+
+  <link name="imu_link">
+
+    <visual>
+
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+
+      <geometry>
+        <box size="0.05 0.04 0.015"/>
+      </geometry>
+
+      <material name="evrenos_sensor"/>
+
+    </visual>
+
+  </link>
+
+  <joint name="imu_joint" type="fixed">
+
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+
+    <!-- Close to vehicle center / center of mass -->
+    <origin
+      xyz="0 0 0.05"
+      rpy="0 0 0"/>
+
+  </joint>
+
+
+  <!-- ====================================================== -->
+  <!-- EMLID REACH M+ / RTK                                   -->
+  <!-- ====================================================== -->
+
+  <link name="gps_link">
+
+    <visual>
+
+      <origin xyz="0 0 0.025" rpy="0 0 0"/>
+
+      <geometry>
+        <cylinder radius="0.045" length="0.05"/>
+      </geometry>
+
+      <material name="evrenos_dark"/>
+
+    </visual>
+
+  </link>
+
+  <joint name="gps_joint" type="fixed">
+
+    <parent link="body_link"/>
+    <child link="gps_link"/>
+
+    <!-- Upper rear section -->
+    <origin
+      xyz="-0.24 0 0.32"
+      rpy="0 0 0"/>
+
+  </joint>
+
+</robot>
+
