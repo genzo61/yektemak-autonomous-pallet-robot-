@@ -1,0 +1,124 @@
+ekf_filter_node:
+  ros__parameters:
+
+    # ============================================================
+    # EVRENOS REAL VEHICLE EKF
+    #
+    # Input:
+    #   /wheel/odom  <- STM32 4-wheel encoder bridge
+    #
+    # Later:
+    #   /imu/data    <- BNO055
+    #
+    # Output:
+    #   /odometry/filtered
+    #   odom -> base_footprint TF
+    # ============================================================
+
+    frequency: 30.0
+    sensor_timeout: 0.2
+
+    two_d_mode: true
+
+    publish_tf: true
+    publish_acceleration: false
+
+    print_diagnostics: true
+
+    # ------------------------------------------------------------
+    # Frames
+    # ------------------------------------------------------------
+
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_footprint
+
+    # EKF is responsible only for local odometry:
+    #
+    # odom -> base_footprint
+    #
+    # SLAM / AMCL will later own:
+    #
+    # map -> odom
+    #
+    world_frame: odom
+
+
+    # ============================================================
+    # WHEEL ODOMETRY
+    # ============================================================
+
+    odom0: /wheel/odom
+
+    # robot_localization variable order:
+    #
+    # x, y, z,
+    # roll, pitch, yaw,
+    # vx, vy, vz,
+    # vroll, vpitch, vyaw,
+    # ax, ay, az
+    #
+    # Our STM32 bridge already calculates:
+    #
+    # linear.x  -> vx
+    # angular.z -> vyaw
+    #
+    # We fuse velocities rather than the integrated wheel pose
+    # because they come from the same encoder source and this
+    # avoids unnecessarily feeding correlated information twice.
+
+    odom0_config:
+      [
+        false, false, false,
+        false, false, false,
+        true,  false, false,
+        false, false, true,
+        false, false, false
+      ]
+
+    odom0_queue_size: 10
+
+    odom0_differential: false
+    odom0_relative: false
+
+    # Reject obviously unreasonable jumps.
+    odom0_pose_rejection_threshold: 5.0
+    odom0_twist_rejection_threshold: 2.0
+
+
+    # ============================================================
+    # CONTROL INPUT
+    #
+    # Do not fuse /cmd_vel into EKF for now.
+    # We want localization to be based on actual vehicle motion.
+    # ============================================================
+
+    use_control: false
+
+
+    # ============================================================
+    # PROCESS NOISE
+    #
+    # Initial prototype values.
+    # These will be tuned using the real EVRENOS.
+    # ============================================================
+
+    process_noise_covariance:
+      [
+        0.05, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+        0.0,  0.05, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+        0.0,  0.0,  0.06, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+        0.0,  0.0,  0.0,  0.03, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+        0.0,  0.0,  0.0,  0.0,  0.03, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+        0.0,  0.0,  0.0,  0.0,  0.0,  0.06, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.025,0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.025,0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.04, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0,  0.0,
+        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0,
+        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.03, 0.0,  0.0,  0.0,
+        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,
+        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,
+        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.015
+      ]
+
