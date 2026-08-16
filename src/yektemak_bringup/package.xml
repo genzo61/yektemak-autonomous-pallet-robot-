@@ -56,4 +56,5 @@
     <build_type>ament_cmake</build_type>
   </export>
 
+  <exec_depend>yektemak_unitree_lidar</exec_depend>
 </package>

@@ -57,6 +57,15 @@ def generate_launch_description():
         )
     )
 
+    imu_topic_arg = DeclareLaunchArgument(
+        'imu_topic',
+        default_value='/imu/data',
+        description=(
+            'BNO055 sensor_msgs/Imu topic. '
+            'Replace with actual driver topic on the real vehicle.'
+        )
+    )
+
     use_sim_time_arg = DeclareLaunchArgument(
         'use_sim_time',
         default_value='false',
@@ -72,6 +81,7 @@ def generate_launch_description():
     baudrate = LaunchConfiguration('baudrate')
     track_width = LaunchConfiguration('track_width')
     use_sim_time = LaunchConfiguration('use_sim_time')
+    imu_topic = LaunchConfiguration('imu_topic')
 
 
     # ============================================================
@@ -224,9 +234,9 @@ def generate_launch_description():
 
         remappings=[
             (
-                '/odometry/filtered',
-                '/odometry/filtered'
-            )
+                '/imu/data',
+                imu_topic
+            ),
         ]
     )
 
@@ -245,5 +255,6 @@ def generate_launch_description():
             robot_state_publisher,
             stm32_bridge,
             ekf_node,
+            imu_topic_arg,
         ]
     )

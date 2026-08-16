@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-
+from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
@@ -16,7 +16,7 @@ from launch.launch_description_sources import (
     PythonLaunchDescriptionSource,
 )
 
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration,PathJoinSubstitution
 
 from launch_ros.actions import Node
 
@@ -94,7 +94,7 @@ def generate_launch_description():
 
     cloud_topic_arg = DeclareLaunchArgument(
         'cloud_topic',
-        default_value='/points',
+        default_value='/unilidar/cloud',
         description=(
             'Real Unitree PointCloud2 topic. '
             'Change to actual driver topic on Jetson.'
@@ -113,6 +113,12 @@ def generate_launch_description():
         description='Full path to saved map YAML'
     )
 
+    imu_topic_arg = DeclareLaunchArgument(
+        'imu_topic',
+        default_value='/imu/data',
+        description='BNO055 IMU topic'
+    )
+
     use_sim_time_arg = DeclareLaunchArgument(
         'use_sim_time',
         default_value='false',
@@ -123,6 +129,32 @@ def generate_launch_description():
         'rviz',
         default_value='true',
         description='Start RViz2'
+    )
+
+    start_lidar_driver_arg = DeclareLaunchArgument(
+        'start_lidar_driver',
+        default_value='false',
+        description='Start Unitree L1 UDP driver'
+    )
+
+    lidar_ip_arg = DeclareLaunchArgument(
+        'lidar_ip',
+        default_value='192.168.1.62'
+    )
+
+    local_ip_arg = DeclareLaunchArgument(
+        'local_ip',
+        default_value='192.168.1.2'
+    )
+
+    lidar_port_arg = DeclareLaunchArgument(
+        'lidar_port',
+        default_value='6101'
+    )
+
+    local_port_arg = DeclareLaunchArgument(
+        'local_port',
+        default_value='6201'
     )
 
 
@@ -138,9 +170,17 @@ def generate_launch_description():
     scan_topic = LaunchConfiguration('scan_topic')
 
     map_file = LaunchConfiguration('map')
-
+    imu_topic = LaunchConfiguration('imu_topic')
     use_sim_time = LaunchConfiguration('use_sim_time')
     use_rviz = LaunchConfiguration('rviz')
+
+    start_lidar_driver = LaunchConfiguration('start_lidar_driver')
+
+    lidar_ip = LaunchConfiguration('lidar_ip')
+    local_ip = LaunchConfiguration('local_ip')
+
+    lidar_port = LaunchConfiguration('lidar_port')
+    local_port = LaunchConfiguration('local_port')
 
 
     # ============================================================
@@ -170,6 +210,18 @@ def generate_launch_description():
             'serial_port': serial_port,
             'baudrate': baudrate,
             'track_width': track_width,
+            'imu_topic': imu_topic,
+            'start_lidar_driver': start_lidar_driver,
+
+            'cloud_topic': cloud_topic,
+            'scan_topic': scan_topic,
+
+            'lidar_ip': lidar_ip,
+            'local_ip': local_ip,
+
+            'lidar_port': lidar_port,
+            'local_port': local_port,
+
             'use_sim_time': use_sim_time,
         }.items()
     )
@@ -188,17 +240,25 @@ def generate_launch_description():
     # ============================================================
 
     real_sensors = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                bringup_share,
-                'launch',
-                'evrenos_real_sensors.launch.py'
-            )
-        ),
-
+    PythonLaunchDescriptionSource(
+        PathJoinSubstitution([
+            FindPackageShare('yektemak_bringup'), # pyright: ignore[reportUndefinedVariable]
+            'launch',
+            'evrenos_real_sensors.launch.py',
+        ])
+    ),
         launch_arguments={
+            'start_lidar_driver': start_lidar_driver,
+
             'cloud_topic': cloud_topic,
             'scan_topic': scan_topic,
+
+            'lidar_ip': lidar_ip,
+            'local_ip': local_ip,
+
+            'lidar_port': lidar_port,
+            'local_port': local_port,
+
             'use_sim_time': use_sim_time,
         }.items()
     )
@@ -278,6 +338,12 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            start_lidar_driver_arg,
+            lidar_ip_arg,
+            local_ip_arg,
+            lidar_port_arg,
+            local_port_arg,
+
             serial_port_arg,
             baudrate_arg,
             track_width_arg,
@@ -286,7 +352,7 @@ def generate_launch_description():
             scan_topic_arg,
 
             map_arg,
-
+            imu_topic_arg,
             use_sim_time_arg,
             use_rviz_arg,
 

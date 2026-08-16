@@ -1,115 +1,254 @@
-#!/usr/bin/env python3
-
-import os
-
-from ament_index_python.packages import get_package_share_directory
-
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
 
-from launch.substitutions import LaunchConfiguration
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+)
+
+from launch.conditions import IfCondition
+
+from launch.launch_description_sources import (
+    PythonLaunchDescriptionSource,
+)
+
+from launch.substitutions import (
+    LaunchConfiguration,
+    PathJoinSubstitution,
+)
 
 from launch_ros.actions import Node
+
+from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
 
-    bringup_share = get_package_share_directory(
-        'yektemak_bringup'
-    )
-
-    pointcloud_to_scan_config = os.path.join(
-        bringup_share,
-        'config',
-        'evrenos_pointcloud_to_scan_real.yaml'
-    )
-
-
     # ============================================================
-    # Arguments
+    # Launch arguments
     # ============================================================
 
-    cloud_topic_arg = DeclareLaunchArgument(
-        'cloud_topic',
-        default_value='/points',
-        description=(
-            'Real LiDAR sensor_msgs/PointCloud2 topic. '
-            'Change this to the actual Unitree driver topic on Jetson.'
-        )
-    )
-
-    scan_topic_arg = DeclareLaunchArgument(
-        'scan_topic',
-        default_value='/scan',
-        description='Output sensor_msgs/LaserScan topic'
-    )
-
-    use_sim_time_arg = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='false',
-        description='Use simulation clock'
-    )
-
-
-    cloud_topic = LaunchConfiguration('cloud_topic')
-    scan_topic = LaunchConfiguration('scan_topic')
     use_sim_time = LaunchConfiguration('use_sim_time')
+
+    start_lidar_driver = LaunchConfiguration(
+        'start_lidar_driver'
+    )
+
+    cloud_topic = LaunchConfiguration(
+        'cloud_topic'
+    )
+
+    scan_topic = LaunchConfiguration(
+        'scan_topic'
+    )
+
+    lidar_ip = LaunchConfiguration(
+        'lidar_ip'
+    )
+
+    local_ip = LaunchConfiguration(
+        'local_ip'
+    )
+
+    lidar_port = LaunchConfiguration(
+        'lidar_port'
+    )
+
+    local_port = LaunchConfiguration(
+        'local_port'
+    )
+
+
+    # ============================================================
+    # Unitree L1 UDP driver
+    #
+    # Disabled by default so development/mock tests can run
+    # without physical LiDAR hardware.
+    # ============================================================
+
+    unitree_l1_driver = IncludeLaunchDescription(
+
+        PythonLaunchDescriptionSource(
+
+            PathJoinSubstitution([
+                FindPackageShare(
+                    'yektemak_unitree_lidar'
+                ),
+
+                'launch',
+
+                'evrenos_unitree_l1_udp.launch.py',
+            ])
+        ),
+
+        condition=IfCondition(
+            start_lidar_driver
+        ),
+
+        launch_arguments={
+
+            'lidar_ip':
+                lidar_ip,
+
+            'local_ip':
+                local_ip,
+
+            'lidar_port':
+                lidar_port,
+
+            'local_port':
+                local_port,
+
+            'cloud_topic':
+                cloud_topic,
+
+            'cloud_frame':
+                'lidar_link',
+
+        }.items(),
+    )
 
 
     # ============================================================
     # PointCloud2 -> LaserScan
-    #
-    # Vendor-independent layer.
-    #
-    # Unitree driver:
-    #
-    #      SOME POINTCLOUD TOPIC
-    #               |
-    #               v
-    #            cloud_in
-    #               |
-    #      pointcloud_to_laserscan
-    #               |
-    #               v
-    #              /scan
-    #
-    # The actual Unitree cloud topic can therefore be changed
-    # without changing SLAM/Nav2 configuration.
     # ============================================================
 
-    cloud_to_scan = Node(
+    pointcloud_to_scan_config = PathJoinSubstitution([
+
+        FindPackageShare(
+            'yektemak_bringup'
+        ),
+
+        'config',
+
+        'evrenos_pointcloud_to_scan_real.yaml',
+    ])
+
+
+    pointcloud_to_scan = Node(
+
         package='pointcloud_to_laserscan',
+
         executable='pointcloud_to_laserscan_node',
+
         name='pointcloud_to_laserscan',
 
         output='screen',
 
         parameters=[
+
             pointcloud_to_scan_config,
+
             {
-                'use_sim_time': use_sim_time,
-            }
+                'use_sim_time':
+                    use_sim_time,
+            },
+
         ],
 
         remappings=[
+
             (
                 'cloud_in',
                 cloud_topic
             ),
+
             (
                 'scan',
                 scan_topic
             ),
-        ]
+
+        ],
     )
 
 
-    return LaunchDescription(
-        [
-            cloud_topic_arg,
-            scan_topic_arg,
-            use_sim_time_arg,
+    # ============================================================
+    # Launch description
+    # ============================================================
 
-            cloud_to_scan,
-        ]
-    )
+    return LaunchDescription([
+
+        DeclareLaunchArgument(
+            'start_lidar_driver',
+
+            default_value='false',
+
+            description=(
+                'Start EVRENOS Unitree L1 UDP driver. '
+                'Keep false during laptop/mock testing.'
+            )
+        ),
+
+        DeclareLaunchArgument(
+            'cloud_topic',
+
+            default_value='/unilidar/cloud',
+
+            description=(
+                'Unitree L1 PointCloud2 topic'
+            )
+        ),
+
+        DeclareLaunchArgument(
+            'scan_topic',
+
+            default_value='/scan',
+
+            description=(
+                'LaserScan output topic'
+            )
+        ),
+
+        DeclareLaunchArgument(
+            'lidar_ip',
+
+            default_value='192.168.1.62',
+
+            description=(
+                'Unitree L1 IP address'
+            )
+        ),
+
+        DeclareLaunchArgument(
+            'local_ip',
+
+            default_value='192.168.1.2',
+
+            description=(
+                'Navigation computer Ethernet IP'
+            )
+        ),
+
+        DeclareLaunchArgument(
+            'lidar_port',
+
+            default_value='6101',
+
+            description=(
+                'Unitree L1 UDP port'
+            )
+        ),
+
+        DeclareLaunchArgument(
+            'local_port',
+
+            default_value='6201',
+
+            description=(
+                'Navigation computer UDP receive port'
+            )
+        ),
+
+        DeclareLaunchArgument(
+            'use_sim_time',
+
+            default_value='false',
+
+            description=(
+                'Real sensors use system time'
+            )
+        ),
+
+        unitree_l1_driver,
+
+        pointcloud_to_scan,
+    ])
