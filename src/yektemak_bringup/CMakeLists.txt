@@ -11,6 +11,7 @@ install(
   DIRECTORY
     launch
     config
+    docs
   DESTINATION share/${PROJECT_NAME}
 )
 

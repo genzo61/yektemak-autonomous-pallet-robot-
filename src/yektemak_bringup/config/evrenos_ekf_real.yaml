@@ -7,7 +7,7 @@ ekf_filter_node:
     # Input:
     #   /wheel/odom  <- STM32 4-wheel encoder bridge
     #
-    # Later:
+    # Optional real IMU input:
     #   /imu/data    <- BNO055
     #
     # Output:
@@ -85,13 +85,13 @@ ekf_filter_node:
     odom0_pose_rejection_threshold: 5.0
     odom0_twist_rejection_threshold: 2.0
 
-        # ============================================================
+    # ============================================================
     # BNO055 IMU
     #
     # Expected topic:
     #   /imu/data
     #
-    # Prototype fusion:
+    # Initial safe fusion:
     #   angular_velocity.z only
     #
     # Absolute yaw/orientation will be enabled only after checking:
@@ -156,4 +156,3 @@ ekf_filter_node:
         0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,
         0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.015
       ]
-

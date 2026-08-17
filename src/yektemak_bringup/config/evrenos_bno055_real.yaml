@@ -1,0 +1,37 @@
+bno055:
+  ros__parameters:
+
+    # The EVRENOS launch fixes the public filtered IMU interface to:
+    #   frame_id: imu_link
+    #   topic:    /imu/data
+    ros_topic_prefix: "bno055/"
+
+    # Prototype connection settings inherited from the upstream ROS 2
+    # driver. Verify the actual Jetson connection before enabling the node.
+    connection_type: "uart"
+    uart_port: "/dev/ttyUSB0"
+    uart_baudrate: 115200
+    uart_timeout: 0.1
+
+    data_query_frequency: 100
+    calib_status_frequency: 0.1
+    operation_mode: 0x0C
+
+    # P1 is the driver's native/default axis mapping. Verify it against
+    # REP-103 and the physical EVRENOS mounting before hardware operation.
+    placement_axis_remap: "P1"
+
+    acc_factor: 100.0
+    mag_factor: 16000000.0
+    gyr_factor: 900.0
+    grav_factor: 100.0
+
+    # Do not apply unverified calibration offsets.
+    set_offsets: false
+
+    # Non-zero upstream driver defaults. These are variances placed on the
+    # covariance diagonals, and must be characterized on the real vehicle.
+    variance_acc: [0.017, 0.017, 0.017]
+    variance_angular_vel: [0.04, 0.04, 0.04]
+    variance_orientation: [0.0159, 0.0159, 0.0159]
+    variance_mag: [0.0, 0.0, 0.0]

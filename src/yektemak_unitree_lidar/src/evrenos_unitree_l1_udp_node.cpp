@@ -57,7 +57,7 @@ public:
       "cloud_topic", "/unilidar/cloud");
 
     cloud_frame_ = declare_parameter<std::string>(
-      "cloud_frame", "lidar_link");
+      "cloud_frame", "unilidar_lidar");
 
     imu_topic_ = declare_parameter<std::string>(
       "imu_topic", "/unilidar/imu");

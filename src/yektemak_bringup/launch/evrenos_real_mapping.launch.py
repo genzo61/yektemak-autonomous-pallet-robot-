@@ -57,6 +57,22 @@ def generate_launch_description():
         )
     )
 
+    motion_enabled_arg = DeclareLaunchArgument(
+        'motion_enabled', default_value='false'
+    )
+    max_linear_speed_arg = DeclareLaunchArgument(
+        'max_linear_speed', default_value='0.10'
+    )
+    max_angular_speed_arg = DeclareLaunchArgument(
+        'max_angular_speed', default_value='0.20'
+    )
+    watchdog_timeout_arg = DeclareLaunchArgument(
+        'watchdog_timeout', default_value='0.5'
+    )
+    startup_zero_duration_arg = DeclareLaunchArgument(
+        'startup_zero_duration', default_value='1.0'
+    )
+
     cloud_topic_arg = DeclareLaunchArgument(
         'cloud_topic',
         default_value='/unilidar/cloud',
@@ -76,6 +92,22 @@ def generate_launch_description():
         'imu_topic',
         default_value='/imu/data',
         description='BNO055 IMU topic'
+    )
+
+    start_bno055_driver_arg = DeclareLaunchArgument(
+        'start_bno055_driver',
+        default_value='false',
+        description='Start BNO055 driver'
+    )
+
+    bno055_config_arg = DeclareLaunchArgument(
+        'bno055_config',
+        default_value=os.path.join(
+            bringup_share,
+            'config',
+            'evrenos_bno055_real.yaml'
+        ),
+        description='BNO055 real-vehicle configuration file'
     )
 
     use_sim_time_arg = DeclareLaunchArgument(
@@ -118,12 +150,19 @@ def generate_launch_description():
     serial_port = LaunchConfiguration('serial_port')
     baudrate = LaunchConfiguration('baudrate')
     track_width = LaunchConfiguration('track_width')
+    motion_enabled = LaunchConfiguration('motion_enabled')
+    max_linear_speed = LaunchConfiguration('max_linear_speed')
+    max_angular_speed = LaunchConfiguration('max_angular_speed')
+    watchdog_timeout = LaunchConfiguration('watchdog_timeout')
+    startup_zero_duration = LaunchConfiguration('startup_zero_duration')
 
     cloud_topic = LaunchConfiguration('cloud_topic')
     scan_topic = LaunchConfiguration('scan_topic')
 
     use_sim_time = LaunchConfiguration('use_sim_time')
     imu_topic = LaunchConfiguration('imu_topic')
+    start_bno055_driver = LaunchConfiguration('start_bno055_driver')
+    bno055_config = LaunchConfiguration('bno055_config')
 
     start_lidar_driver = LaunchConfiguration('start_lidar_driver')
 
@@ -156,18 +195,17 @@ def generate_launch_description():
         ),
 
         launch_arguments={
-            'start_lidar_driver': start_lidar_driver,
+            'serial_port': serial_port,
+            'baudrate': baudrate,
+            'track_width': track_width,
+            'motion_enabled': motion_enabled,
+            'max_linear_speed': max_linear_speed,
+            'max_angular_speed': max_angular_speed,
+            'watchdog_timeout': watchdog_timeout,
+            'startup_zero_duration': startup_zero_duration,
             'imu_topic': imu_topic,
-
-            'cloud_topic': cloud_topic,
-            'scan_topic': scan_topic,
-
-            'lidar_ip': lidar_ip,
-            'local_ip': local_ip,
-
-            'lidar_port': lidar_port,
-            'local_port': local_port,
-
+            'start_bno055_driver': start_bno055_driver,
+            'bno055_config': bno055_config,
             'use_sim_time': use_sim_time,
         }.items()
     )
@@ -193,8 +231,15 @@ def generate_launch_description():
         ),
 
         launch_arguments={
+            'start_lidar_driver': start_lidar_driver,
             'cloud_topic': cloud_topic,
             'scan_topic': scan_topic,
+
+            'lidar_ip': lidar_ip,
+            'local_ip': local_ip,
+            'lidar_port': lidar_port,
+            'local_port': local_port,
+
             'use_sim_time': use_sim_time,
         }.items()
     )
@@ -242,11 +287,18 @@ def generate_launch_description():
             serial_port_arg,
             baudrate_arg,
             track_width_arg,
+            motion_enabled_arg,
+            max_linear_speed_arg,
+            max_angular_speed_arg,
+            watchdog_timeout_arg,
+            startup_zero_duration_arg,
 
             cloud_topic_arg,
             scan_topic_arg,
 
             imu_topic_arg,
+            start_bno055_driver_arg,
+            bno055_config_arg,
             use_sim_time_arg,
 
             start_lidar_driver_arg,

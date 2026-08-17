@@ -6,9 +6,11 @@ import threading
 
 import rclpy
 from rclpy.node import Node
+from rclpy.parameter import Parameter
 
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
+from rcl_interfaces.msg import SetParametersResult
 
 import serial
 
@@ -42,8 +44,13 @@ class EvrenosSTM32Bridge(Node):
         self.declare_parameter('track_width', 1.065)
 
         self.declare_parameter('publish_rate', 20.0)
-        self.declare_parameter('cmd_vel_timeout', 0.5)
+        self.declare_parameter('watchdog_timeout', 0.5)
+        self.declare_parameter('startup_zero_duration', 1.0)
         self.declare_parameter('reconnect_interval', 2.0)
+
+        self.declare_parameter('motion_enabled', False)
+        self.declare_parameter('max_linear_speed', 0.10)
+        self.declare_parameter('max_angular_speed', 0.20)
 
         # Wheel sign correction.
         # Keep +1 initially because forward encoder direction is expected positive.
@@ -84,12 +91,36 @@ class EvrenosSTM32Bridge(Node):
             self.get_parameter('publish_rate').value
         )
 
-        self.cmd_vel_timeout = float(
-            self.get_parameter('cmd_vel_timeout').value
+        self.watchdog_timeout = float(
+            self.get_parameter('watchdog_timeout').value
+        )
+
+        self.startup_zero_duration = float(
+            self.get_parameter('startup_zero_duration').value
         )
 
         self.reconnect_interval = float(
             self.get_parameter('reconnect_interval').value
+        )
+
+        self.motion_enabled = bool(
+            self.get_parameter('motion_enabled').value
+        )
+
+        self.max_linear_speed = max(
+            0.0,
+            float(self.get_parameter('max_linear_speed').value)
+        )
+
+        self.max_angular_speed = max(
+            0.0,
+            float(self.get_parameter('max_angular_speed').value)
+        )
+
+        self.watchdog_timeout = max(0.0, self.watchdog_timeout)
+        self.startup_zero_duration = max(
+            0.0,
+            self.startup_zero_duration
         )
 
         self.right_rear_sign = float(
@@ -144,7 +175,8 @@ class EvrenosSTM32Bridge(Node):
         self.turret_tilt_direction = 0
         self.turret_tilt_speed = 0
 
-        self.last_cmd_time = self.get_clock().now()
+        self.last_cmd_time = None
+        self.connection_time = None
 
         # Integrated wheel odometry pose
         self.x = 0.0
@@ -152,6 +184,12 @@ class EvrenosSTM32Bridge(Node):
         self.yaw = 0.0
 
         self.last_odom_time = None
+
+        self.parameter_callback_handle = (
+            self.add_on_set_parameters_callback(
+                self.parameter_update_callback
+            )
+        )
 
         self.connect_serial()
 
@@ -171,6 +209,21 @@ class EvrenosSTM32Bridge(Node):
         )
 
         self.get_logger().info(
+            'Safety settings: '
+            f'motion_enabled={self.motion_enabled}, '
+            f'max_linear_speed={self.max_linear_speed:.3f} m/s, '
+            f'max_angular_speed={self.max_angular_speed:.3f} rad/s, '
+            f'watchdog_timeout={self.watchdog_timeout:.3f} s, '
+            'startup/reconnect zero duration='
+            f'{self.startup_zero_duration:.3f} s'
+        )
+
+        if not self.motion_enabled:
+            self.get_logger().warn(
+                'MOTION DISABLED - zero velocity only'
+            )
+
+        self.get_logger().info(
             f'cmd_vel: {self.cmd_vel_topic}'
         )
 
@@ -182,6 +235,56 @@ class EvrenosSTM32Bridge(Node):
             f'Using prototype track_width={self.track_width:.3f} m. '
             'Measure/tune this on the real vehicle.'
         )
+
+    # ================================================================
+    # Runtime safety parameters
+    # ================================================================
+
+    def parameter_update_callback(self, parameters):
+        for parameter in parameters:
+            if parameter.name != 'motion_enabled':
+                continue
+
+            if parameter.type_ != Parameter.Type.BOOL:
+                return SetParametersResult(
+                    successful=False,
+                    reason='motion_enabled must be a boolean'
+                )
+
+            requested_enabled = bool(parameter.value)
+
+            # Enabling motion requires an explicit launch argument. A live
+            # parameter change may only remove motion authority.
+            if requested_enabled and not self.motion_enabled:
+                return SetParametersResult(
+                    successful=False,
+                    reason=(
+                        'Runtime motor enable is blocked; restart with '
+                        'motion_enabled:=true after preflight'
+                    )
+                )
+
+            if not requested_enabled:
+                self.motion_enabled = False
+                self.command_linear_x = 0.0
+                self.command_angular_z = 0.0
+                self.last_cmd_time = None
+
+                self.turret_pan_direction = 0
+                self.turret_pan_speed = 0
+                self.turret_tilt_direction = 0
+                self.turret_tilt_speed = 0
+
+                # Send redundant STOP frames immediately if connected. The
+                # regular control loop continues sending zero afterward.
+                for _ in range(3):
+                    self.send_command(0.0, 0.0)
+
+                self.get_logger().warn(
+                    'MOTION DISABLED AT RUNTIME - zero velocity only'
+                )
+
+        return SetParametersResult(successful=True)
 
     # ================================================================
     # Serial
@@ -208,8 +311,15 @@ class EvrenosSTM32Bridge(Node):
 
             self.rx_buffer.clear()
 
+            # A command from before this connection must never be reused.
+            self.command_linear_x = 0.0
+            self.command_angular_z = 0.0
+            self.last_cmd_time = None
+            self.connection_time = self.get_clock().now()
+
             self.get_logger().info(
-                f'STM32 connected: {self.serial_port}'
+                f'STM32 connected: {self.serial_port}; zero interlock '
+                f'active for {self.startup_zero_duration:.3f} s'
             )
 
             return True
@@ -233,6 +343,10 @@ class EvrenosSTM32Bridge(Node):
                 pass
 
         self.serial_connection = None
+        self.command_linear_x = 0.0
+        self.command_angular_z = 0.0
+        self.last_cmd_time = None
+        self.connection_time = None
         self.rx_buffer.clear()
 
     # ================================================================
@@ -240,8 +354,39 @@ class EvrenosSTM32Bridge(Node):
     # ================================================================
 
     def cmd_vel_callback(self, msg: Twist):
-        self.command_linear_x = float(msg.linear.x)
-        self.command_angular_z = float(msg.angular.z)
+        linear_x = float(msg.linear.x)
+        angular_z = float(msg.angular.z)
+
+        if not math.isfinite(linear_x) or not math.isfinite(angular_z):
+            self.command_linear_x = 0.0
+            self.command_angular_z = 0.0
+            self.last_cmd_time = self.get_clock().now()
+            self.get_logger().warn(
+                'Invalid cmd_vel (NaN or infinity); commanding zero',
+                throttle_duration_sec=2.0
+            )
+            return
+
+        clamped_linear_x = max(
+            -self.max_linear_speed,
+            min(linear_x, self.max_linear_speed)
+        )
+        clamped_angular_z = max(
+            -self.max_angular_speed,
+            min(angular_z, self.max_angular_speed)
+        )
+
+        if (
+            clamped_linear_x != linear_x
+            or clamped_angular_z != angular_z
+        ):
+            self.get_logger().warn(
+                'cmd_vel clamped to configured speed limits',
+                throttle_duration_sec=2.0
+            )
+
+        self.command_linear_x = clamped_linear_x
+        self.command_angular_z = clamped_angular_z
 
         self.last_cmd_time = self.get_clock().now()
 
@@ -594,13 +739,27 @@ class EvrenosSTM32Bridge(Node):
 
         now = self.get_clock().now()
 
-        command_age = (
-            now - self.last_cmd_time
-        ).nanoseconds / 1e9
+        startup_interlock_active = (
+            self.connection_time is None
+            or (
+                now - self.connection_time
+            ).nanoseconds / 1e9 < self.startup_zero_duration
+        )
 
-        # Safety watchdog:
-        # no recent cmd_vel -> STOP
-        if command_age > self.cmd_vel_timeout:
+        command_is_fresh = False
+        if self.last_cmd_time is not None:
+            command_age = (
+                now - self.last_cmd_time
+            ).nanoseconds / 1e9
+            command_is_fresh = command_age <= self.watchdog_timeout
+
+        # Safety interlocks: motion disabled, startup/reconnect delay, or
+        # no fresh cmd_vel all force an explicit STOP frame.
+        if (
+            not self.motion_enabled
+            or startup_interlock_active
+            or not command_is_fresh
+        ):
             linear_x = 0.0
             angular_z = 0.0
 
@@ -628,11 +787,7 @@ class EvrenosSTM32Bridge(Node):
         except Exception:
             pass
 
-        if (
-            self.serial_connection is not None
-            and self.serial_connection.is_open
-        ):
-            self.serial_connection.close()
+        self.disconnect_serial()
 
 
 def main(args=None):

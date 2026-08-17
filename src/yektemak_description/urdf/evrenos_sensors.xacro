@@ -36,13 +36,30 @@
 
   <joint name="lidar_joint" type="fixed">
 
-    <parent link="body_link"/>
+    <parent link="base_link"/>
     <child link="lidar_link"/>
 
-    <!-- Upper/front portion of vehicle -->
+    <!--
+      Preserve the original mount pose relative to base_link.
+      The previous body_link parent contributes
+      base_height / 2.0 + 0.08 in Z.
+    -->
     <origin
-      xyz="0.12 0 0.31"
+      xyz="0.12 0 ${base_height / 2.0 + 0.08 + 0.31}"
       rpy="0 0 0"/>
+
+  </joint>
+
+  <!-- Unitree L1 PointCloud2 measurement/output frame -->
+  <link name="unilidar_lidar"/>
+
+  <joint name="unilidar_lidar_joint" type="fixed">
+
+    <parent link="lidar_link"/>
+    <child link="unilidar_lidar"/>
+
+    <!-- Replace only if a verified sensor-to-mount transform is measured. -->
+    <origin xyz="0 0 0" rpy="0 0 0"/>
 
   </joint>
 
@@ -159,4 +176,3 @@
   </joint>
 
 </robot>
-
