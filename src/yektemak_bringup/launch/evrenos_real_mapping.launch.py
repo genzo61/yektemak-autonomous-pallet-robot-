@@ -91,7 +91,7 @@ def generate_launch_description():
     imu_topic_arg = DeclareLaunchArgument(
         'imu_topic',
         default_value='/imu/data',
-        description='BNO055 IMU topic'
+        description='Selected real IMU topic consumed by the EKF'
     )
 
     start_bno055_driver_arg = DeclareLaunchArgument(
@@ -234,6 +234,9 @@ def generate_launch_description():
             'start_lidar_driver': start_lidar_driver,
             'cloud_topic': cloud_topic,
             'scan_topic': scan_topic,
+            'imu_topic': imu_topic,
+            'imu_frame': 'unilidar_imu',
+            'start_bno055_driver': start_bno055_driver,
 
             'lidar_ip': lidar_ip,
             'local_ip': local_ip,

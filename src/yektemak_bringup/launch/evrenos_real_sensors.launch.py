@@ -3,6 +3,7 @@ from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
+    OpaqueFunction,
 )
 
 from launch.conditions import IfCondition
@@ -19,6 +20,23 @@ from launch.substitutions import (
 from launch_ros.actions import Node
 
 from launch_ros.substitutions import FindPackageShare
+
+
+def validate_imu_sources(context):
+    if (
+        IfCondition(
+            LaunchConfiguration('start_lidar_driver')
+        ).evaluate(context)
+        and IfCondition(
+            LaunchConfiguration('start_bno055_driver')
+        ).evaluate(context)
+    ):
+        raise RuntimeError(
+            'Unitree L1 and BNO055 drivers cannot both be enabled: '
+            'they share the configured IMU output topic.'
+        )
+
+    return []
 
 
 def generate_launch_description():
@@ -39,6 +57,14 @@ def generate_launch_description():
 
     scan_topic = LaunchConfiguration(
         'scan_topic'
+    )
+
+    imu_topic = LaunchConfiguration(
+        'imu_topic'
+    )
+
+    imu_frame = LaunchConfiguration(
+        'imu_frame'
     )
 
     lidar_ip = LaunchConfiguration(
@@ -103,6 +129,12 @@ def generate_launch_description():
 
             'cloud_frame':
                 'unilidar_lidar',
+
+            'imu_topic':
+                imu_topic,
+
+            'imu_frame':
+                imu_frame,
 
         }.items(),
     )
@@ -199,6 +231,36 @@ def generate_launch_description():
         ),
 
         DeclareLaunchArgument(
+            'imu_topic',
+
+            default_value='/imu/data',
+
+            description=(
+                'Unitree L1 Imu topic consumed by the EKF'
+            )
+        ),
+
+        DeclareLaunchArgument(
+            'imu_frame',
+
+            default_value='unilidar_imu',
+
+            description=(
+                'Unitree L1 built-in IMU frame'
+            )
+        ),
+
+        DeclareLaunchArgument(
+            'start_bno055_driver',
+
+            default_value='false',
+
+            description=(
+                'Used to prevent two IMU drivers publishing one topic'
+            )
+        ),
+
+        DeclareLaunchArgument(
             'lidar_ip',
 
             default_value='192.168.1.62',
@@ -247,6 +309,8 @@ def generate_launch_description():
                 'Real sensors use system time'
             )
         ),
+
+        OpaqueFunction(function=validate_imu_sources),
 
         unitree_l1_driver,
 

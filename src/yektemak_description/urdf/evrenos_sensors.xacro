@@ -63,6 +63,19 @@
 
   </joint>
 
+  <!-- Unitree L1 built-in IMU measurement/output frame -->
+  <link name="unilidar_imu"/>
+
+  <joint name="unilidar_imu_joint" type="fixed">
+
+    <parent link="unilidar_lidar"/>
+    <child link="unilidar_imu"/>
+
+    <!-- Official Unitree L1 LiDAR-to-IMU transform. -->
+    <origin xyz="-0.007698 -0.014655 0.00667" rpy="0 0 0"/>
+
+  </joint>
+
 
   <!-- ====================================================== -->
   <!-- INTEL REALSENSE CAMERA                                 -->
