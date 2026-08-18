@@ -1,0 +1,42 @@
+pointcloud_to_laserscan:
+  ros__parameters:
+
+    # ------------------------------------------------------------
+    # EVRENOS REAL LIDAR -> 2D LASERSCAN
+    #
+    # Input topic is remapped by launch:
+    #   cloud_in -> configurable real LiDAR PointCloud2 topic
+    #
+    # Output:
+    #   scan -> /scan
+    #
+    # These are prototype values.
+    # Tune using the real Unitree cloud on the vehicle.
+    # ------------------------------------------------------------
+
+    target_frame: lidar_link
+
+    transform_tolerance: 0.05
+    queue_size: 10
+
+    # Thin horizontal slice around the LiDAR origin.
+    # Same initial idea that worked in simulation.
+    min_height: -0.10
+    max_height: 0.10
+
+    # Full 360 degrees
+    angle_min: -3.141592653589793
+    angle_max: 3.141592653589793
+
+    # 2 degrees
+    angle_increment: 0.03490658503988659
+
+    # Prototype: 5 Hz
+    scan_time: 0.20
+
+    # Prototype range limits
+    range_min: 0.50
+    range_max: 12.0
+
+    use_inf: true
+
