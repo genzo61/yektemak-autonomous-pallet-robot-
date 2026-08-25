@@ -100,12 +100,12 @@
       <right_joint>rear_right_wheel_joint</right_joint>
 
       <!-- Front wheel pair -->
-      <wheel_separation>1.065</wheel_separation>
-      <wheel_diameter>0.45</wheel_diameter>
+      <wheel_separation>${track_width}</wheel_separation>
+      <wheel_diameter>${2.0 * wheel_radius}</wheel_diameter>
 
       <!-- Rear wheel pair -->
-      <wheel_separation>1.065</wheel_separation>
-      <wheel_diameter>0.45</wheel_diameter>
+      <wheel_separation>${track_width}</wheel_separation>
+      <wheel_diameter>${2.0 * wheel_radius}</wheel_diameter>
 
       <max_wheel_torque>120.0</max_wheel_torque>
 
@@ -314,4 +314,3 @@
   </gazebo>
 
 </robot>
-

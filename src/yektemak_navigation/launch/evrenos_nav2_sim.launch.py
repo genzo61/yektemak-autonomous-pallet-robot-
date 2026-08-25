@@ -21,15 +21,23 @@ def generate_launch_description():
         "nav2_bringup"
     )
 
+    workspace_root = os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.dirname(navigation_share)
+            )
+        )
+    )
+
 
     # -----------------------------------------------------
     # Files
     # -----------------------------------------------------
 
     map_file = os.path.join(
-        navigation_share,
+        workspace_root,
         "maps",
-        "evrenos_competition_map.yaml",
+        "evrenos_slam_tuned.yaml",
     )
 
     nav2_rviz_config = os.path.join(
@@ -108,4 +116,3 @@ def generate_launch_description():
             nav2_rviz,
         ]
     )
-

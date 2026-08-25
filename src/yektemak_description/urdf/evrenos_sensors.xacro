@@ -45,7 +45,7 @@
       base_height / 2.0 + 0.08 in Z.
     -->
     <origin
-      xyz="0.12 0 ${base_height / 2.0 + 0.08 + 0.31}"
+      xyz="${0.12 * vehicle_scale} 0 ${base_height / 2.0 + (0.08 + 0.31) * vehicle_scale}"
       rpy="0 0 0"/>
 
   </joint>
@@ -102,7 +102,7 @@
 
     <!-- Front facing camera -->
     <origin
-      xyz="0.48 0 0.14"
+      xyz="${0.48 * vehicle_scale} 0 ${0.14 * vehicle_scale}"
       rpy="0 0 0"/>
 
   </joint>
@@ -150,7 +150,7 @@
 
     <!-- Close to vehicle center / center of mass -->
     <origin
-      xyz="0 0 0.05"
+      xyz="0 0 ${0.05 * vehicle_scale}"
       rpy="0 0 0"/>
 
   </joint>
@@ -183,7 +183,7 @@
 
     <!-- Upper rear section -->
     <origin
-      xyz="-0.24 0 0.32"
+      xyz="${-0.24 * vehicle_scale} 0 ${0.32 * vehicle_scale}"
       rpy="0 0 0"/>
 
   </joint>

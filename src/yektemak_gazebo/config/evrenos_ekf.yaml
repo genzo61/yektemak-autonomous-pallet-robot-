@@ -5,6 +5,7 @@ ekf_filter_node:
 
     frequency: 50.0
     sensor_timeout: 0.1
+    transform_time_offset: 0.05
 
     # EVRENOS ground vehicle
     two_d_mode: true
@@ -62,4 +63,3 @@ ekf_filter_node:
     imu0_differential: false
     imu0_relative: false
     imu0_queue_size: 20
-

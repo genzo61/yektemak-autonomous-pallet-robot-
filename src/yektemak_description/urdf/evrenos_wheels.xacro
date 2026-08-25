@@ -3,9 +3,9 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- KTR wheel dimensions -->
-  <xacro:property name="wheel_radius" value="0.225"/>
-  <xacro:property name="wheel_width"  value="0.13"/>
-  <xacro:property name="wheel_mass"   value="4.0"/>
+  <xacro:property name="wheel_radius" value="${0.225 * vehicle_scale}"/>
+  <xacro:property name="wheel_width"  value="${0.13 * vehicle_scale}"/>
+  <xacro:property name="wheel_mass"   value="${4.0 * vehicle_scale ** 3}"/>
 
   <!--
     Temporary geometry derived from overall vehicle dimensions.
@@ -15,7 +15,7 @@
 
     wheelbase ~= 1.39 - 0.45 = 0.94 m
   -->
-  <xacro:property name="wheelbase" value="0.94"/>
+  <xacro:property name="wheelbase" value="${0.94 * vehicle_scale}"/>
 
   <!--
     Overall width = 1.195 m
@@ -24,7 +24,7 @@
     Track center distance:
       1.195 - 0.13 = 1.065 m
   -->
-  <xacro:property name="track_width" value="1.065"/>
+  <xacro:property name="track_width" value="${1.065 * vehicle_scale}"/>
 
   <xacro:property
     name="wheel_x_position"
@@ -151,4 +151,3 @@
     y_position="${-wheel_y_position}"/>
 
 </robot>
-

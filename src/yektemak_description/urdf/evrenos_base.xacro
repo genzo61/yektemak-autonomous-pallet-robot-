@@ -4,14 +4,16 @@
 
   <!-- EVRENOS simplified physical chassis -->
 
-  <xacro:property name="base_length" value="1.05"/>
-  <xacro:property name="base_width"  value="0.78"/>
-  <xacro:property name="base_height" value="0.24"/>
+  <xacro:property name="vehicle_scale" value="0.80"/>
 
-  <xacro:property name="base_ground_clearance" value="0.18"/>
+  <xacro:property name="base_length" value="${1.05 * vehicle_scale}"/>
+  <xacro:property name="base_width"  value="${0.78 * vehicle_scale}"/>
+  <xacro:property name="base_height" value="${0.24 * vehicle_scale}"/>
+
+  <xacro:property name="base_ground_clearance" value="${0.18 * vehicle_scale}"/>
 
   <!-- 84 kg chassis + 4 x 4 kg wheel ~= 100 kg -->
-  <xacro:property name="base_mass" value="84.0"/>
+  <xacro:property name="base_mass" value="${84.0 * vehicle_scale ** 3}"/>
 
   <link name="base_footprint"/>
 

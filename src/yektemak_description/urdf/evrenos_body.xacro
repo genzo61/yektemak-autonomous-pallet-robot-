@@ -19,10 +19,10 @@
 
     <!-- Center armored body -->
     <visual>
-      <origin xyz="-0.05 0 0.10" rpy="0 0 0"/>
+      <origin xyz="${-0.05 * vehicle_scale} 0 ${0.10 * vehicle_scale}" rpy="0 0 0"/>
 
       <geometry>
-        <box size="0.68 0.74 0.22"/>
+        <box size="${0.68 * vehicle_scale} ${0.74 * vehicle_scale} ${0.22 * vehicle_scale}"/>
       </geometry>
 
       <material name="evrenos_body"/>
@@ -31,10 +31,10 @@
 
     <!-- Front sloped armor -->
     <visual>
-      <origin xyz="0.34 0 0.055" rpy="0 -0.30 0"/>
+      <origin xyz="${0.34 * vehicle_scale} 0 ${0.055 * vehicle_scale}" rpy="0 -0.30 0"/>
 
       <geometry>
-        <box size="0.42 0.74 0.17"/>
+        <box size="${0.42 * vehicle_scale} ${0.74 * vehicle_scale} ${0.17 * vehicle_scale}"/>
       </geometry>
 
       <material name="evrenos_metal"/>
@@ -43,10 +43,10 @@
 
     <!-- Rear upper armor -->
     <visual>
-      <origin xyz="-0.39 0 0.06" rpy="0 0.20 0"/>
+      <origin xyz="${-0.39 * vehicle_scale} 0 ${0.06 * vehicle_scale}" rpy="0 0.20 0"/>
 
       <geometry>
-        <box size="0.30 0.72 0.17"/>
+        <box size="${0.30 * vehicle_scale} ${0.72 * vehicle_scale} ${0.17 * vehicle_scale}"/>
       </geometry>
 
       <material name="evrenos_body"/>
@@ -55,10 +55,10 @@
 
     <!-- Roof -->
     <visual>
-      <origin xyz="-0.05 0 0.235" rpy="0 0 0"/>
+      <origin xyz="${-0.05 * vehicle_scale} 0 ${0.235 * vehicle_scale}" rpy="0 0 0"/>
 
       <geometry>
-        <box size="0.54 0.58 0.06"/>
+        <box size="${0.54 * vehicle_scale} ${0.58 * vehicle_scale} ${0.06 * vehicle_scale}"/>
       </geometry>
 
       <material name="evrenos_dark"/>
@@ -67,10 +67,10 @@
 
     <!-- Front center armor panel -->
     <visual>
-      <origin xyz="0.50 0 0.015" rpy="0 -0.35 0"/>
+      <origin xyz="${0.50 * vehicle_scale} 0 ${0.015 * vehicle_scale}" rpy="0 -0.35 0"/>
 
       <geometry>
-        <box size="0.18 0.60 0.12"/>
+        <box size="${0.18 * vehicle_scale} ${0.60 * vehicle_scale} ${0.12 * vehicle_scale}"/>
       </geometry>
 
       <material name="evrenos_body"/>
@@ -79,10 +79,10 @@
 
     <!-- Front left lamp -->
     <visual>
-      <origin xyz="0.575 0.20 0.015" rpy="0 0 0"/>
+      <origin xyz="${0.575 * vehicle_scale} ${0.20 * vehicle_scale} ${0.015 * vehicle_scale}" rpy="0 0 0"/>
 
       <geometry>
-        <box size="0.035 0.11 0.07"/>
+        <box size="${0.035 * vehicle_scale} ${0.11 * vehicle_scale} ${0.07 * vehicle_scale}"/>
       </geometry>
 
       <material name="evrenos_light"/>
@@ -91,10 +91,10 @@
 
     <!-- Front center lamp -->
     <visual>
-      <origin xyz="0.575 0 0.015" rpy="0 0 0"/>
+      <origin xyz="${0.575 * vehicle_scale} 0 ${0.015 * vehicle_scale}" rpy="0 0 0"/>
 
       <geometry>
-        <box size="0.035 0.11 0.07"/>
+        <box size="${0.035 * vehicle_scale} ${0.11 * vehicle_scale} ${0.07 * vehicle_scale}"/>
       </geometry>
 
       <material name="evrenos_light"/>
@@ -103,10 +103,10 @@
 
     <!-- Front right lamp -->
     <visual>
-      <origin xyz="0.575 -0.20 0.015" rpy="0 0 0"/>
+      <origin xyz="${0.575 * vehicle_scale} ${-0.20 * vehicle_scale} ${0.015 * vehicle_scale}" rpy="0 0 0"/>
 
       <geometry>
-        <box size="0.035 0.11 0.07"/>
+        <box size="${0.035 * vehicle_scale} ${0.11 * vehicle_scale} ${0.07 * vehicle_scale}"/>
       </geometry>
 
       <material name="evrenos_light"/>
@@ -125,10 +125,9 @@
     <child link="body_link"/>
 
     <origin
-      xyz="0 0 ${base_height / 2.0 + 0.08}"
+      xyz="0 0 ${base_height / 2.0 + 0.08 * vehicle_scale}"
       rpy="0 0 0"/>
 
   </joint>
 
 </robot>
-

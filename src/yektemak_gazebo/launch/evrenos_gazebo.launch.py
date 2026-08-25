@@ -31,7 +31,7 @@ def generate_launch_description():
 
     slam_arg = DeclareLaunchArgument(
         "slam",
-        default_value="true",
+        default_value="false",
     )
 
     slam_enabled = LaunchConfiguration("slam")
@@ -265,6 +265,7 @@ def generate_launch_description():
     return LaunchDescription(
         [
             slam_arg,
+            rviz_arg,
             gazebo,
             robot_state_publisher,
             spawn_evrenos,
@@ -272,7 +273,6 @@ def generate_launch_description():
             pointcloud_to_laserscan,
             slam_node,
             rviz_node,
-            rviz_arg,
             #moving_obstacle_node,
         ]
     )
