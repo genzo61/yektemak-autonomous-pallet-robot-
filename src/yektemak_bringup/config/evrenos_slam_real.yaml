@@ -45,13 +45,14 @@ slam_toolbox:
 
     restamp_tf: false
 
-    min_laser_range: 0.50
+    min_laser_range: 0.15
 
     # IMPORTANT:
-    # /scan itself is 12 m
-    max_laser_range: 12.0
+    # /scan itself is 15 m (matches range_max in
+    # evrenos_pointcloud_to_scan_real.yaml)
+    max_laser_range: 15.0
 
-    minimum_time_interval: 0.20
+    minimum_time_interval: 0.08
 
     transform_timeout: 0.30
     tf_buffer_duration: 30.0

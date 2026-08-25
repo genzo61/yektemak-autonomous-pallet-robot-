@@ -187,8 +187,13 @@ private:
 
       sensor_msgs::msg::Imu msg;
 
+      // NOTE: Unitree L1 internal clock is not synced to the Jetson
+      // ROS clock (no hardware PPS/time-sync available). Using the
+      // sensor's own timestamp caused TF/EKF timestamp mismatches
+      // (map appearing to lag behind real motion). Stamp with the
+      // node's own ROS clock instead.
       msg.header.stamp =
-        make_stamp(imu.stamp);
+        this->now();
 
       msg.header.frame_id =
         imu_frame_;
@@ -246,8 +251,9 @@ private:
         *pcl_cloud,
         msg);
 
+      // See note above: use ROS time, not the LiDAR's internal clock.
       msg.header.stamp =
-        make_stamp(cloud.stamp);
+        this->now();
 
       msg.header.frame_id =
         cloud_frame_;

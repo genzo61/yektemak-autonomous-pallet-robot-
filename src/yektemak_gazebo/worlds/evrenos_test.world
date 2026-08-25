@@ -156,6 +156,196 @@
     </model>
 
 
+    <!-- ================================================= -->
+    <!-- CORRIDOR WALLS - APPROACH LEG (leg A)             -->
+    <!-- Corridor width: 4.0 m (y: -2.0 .. 2.0)            -->
+    <!-- Left wall stops at x=3.1 to leave a turn opening  -->
+    <!-- ================================================= -->
+
+    <model name="corridor_wall_left_leg_a">
+
+      <static>true</static>
+
+      <pose>1.5 2.1 0.75 0 0 0</pose>
+
+      <link name="link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>3.2 0.2 1.50</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>3.2 0.2 1.50</size>
+            </box>
+          </geometry>
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <model name="corridor_wall_right_leg_a">
+
+      <static>true</static>
+
+      <pose>2.5 -2.1 0.75 0 0 0</pose>
+
+      <link name="link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>5.2 0.2 1.50</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>5.2 0.2 1.50</size>
+            </box>
+          </geometry>
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <!-- ================================================= -->
+    <!-- LEFT TURN LEG (leg B)                             -->
+    <!-- Opens off leg A between x=3.1 and x=5.0           -->
+    <!-- Corridor width: 2.0 m (x: 3.0 .. 5.0)             -->
+    <!-- ================================================= -->
+
+    <model name="corridor_wall_turn_west">
+
+      <static>true</static>
+
+      <pose>2.9 4.6 0.75 0 0 0</pose>
+
+      <link name="link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.2 5.2 1.50</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.2 5.2 1.50</size>
+            </box>
+          </geometry>
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <model name="corridor_wall_turn_east">
+
+      <static>true</static>
+
+      <pose>5.1 4.6 0.75 0 0 0</pose>
+
+      <link name="link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.2 5.2 1.50</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.2 5.2 1.50</size>
+            </box>
+          </geometry>
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <model name="corridor_turn_end_wall">
+
+      <static>true</static>
+
+      <pose>4.0 7.1 0.75 0 0 0</pose>
+
+      <link name="link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>2.4 0.2 1.50</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>2.4 0.2 1.50</size>
+            </box>
+          </geometry>
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <!-- ================================================= -->
+    <!-- TURN LEG OBSTACLE                                 -->
+    <!-- ================================================= -->
+
+    <model name="turn_box">
+
+      <static>true</static>
+
+      <pose>4.0 4.5 0.40 0 0 0</pose>
+
+      <link name="link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.60 0.60 0.80</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.60 0.60 0.80</size>
+            </box>
+          </geometry>
+        </visual>
+
+      </link>
+
+    </model>
+
+
   </world>
 
 </sdf>
