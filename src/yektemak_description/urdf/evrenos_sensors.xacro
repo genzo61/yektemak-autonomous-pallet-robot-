@@ -39,13 +39,9 @@
     <parent link="base_link"/>
     <child link="lidar_link"/>
 
-    <!--
-      Preserve the original mount pose relative to base_link.
-      The previous body_link parent contributes
-      base_height / 2.0 + 0.08 in Z.
-    -->
+    <!-- Front-facing mount; lidar_link center is 0.60 m above ground. -->
     <origin
-      xyz="${0.12 * vehicle_scale} 0 ${base_height / 2.0 + (0.08 + 0.31) * vehicle_scale}"
+      xyz="${base_length / 2.0 - 0.08} 0 ${0.60 - (base_ground_clearance + base_height / 2.0)}"
       rpy="0 0 0"/>
 
   </joint>

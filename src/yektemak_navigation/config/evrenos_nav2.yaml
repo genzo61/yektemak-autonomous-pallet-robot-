@@ -202,7 +202,7 @@ local_costmap:
       transform_tolerance: 0.30
 
       footprint: "[[0.70, 0.60], [0.70, -0.60], [-0.70, -0.60], [-0.70, 0.60]]"
-      footprint_padding: 0.03
+      footprint_padding: 0.01
 
       plugins:
         - "obstacle_layer"
@@ -235,8 +235,8 @@ local_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
 
-        inflation_radius: 0.70
-        cost_scaling_factor: 3.0
+        inflation_radius: 0.62
+        cost_scaling_factor: 8.0
 
       always_send_full_costmap: true
 
@@ -249,6 +249,7 @@ global_costmap:
       robot_base_frame: base_footprint
       use_sim_time: True
       footprint: "[[0.70, 0.60], [0.70, -0.60], [-0.70, -0.60], [-0.70, 0.60]]"
+      footprint_padding: 0.01
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "inflation_layer"]
@@ -258,8 +259,8 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.70
+        cost_scaling_factor: 8.0
+        inflation_radius: 0.62
       always_send_full_costmap: True
 
 map_server:
@@ -344,8 +345,8 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.26, 0.0, 1.0]
-    min_velocity: [-0.26, 0.0, -1.0]
+    max_velocity: [0.50, 0.0, 1.0]
+    min_velocity: [-0.50, 0.0, -1.0]
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
     odom_topic: "odom"

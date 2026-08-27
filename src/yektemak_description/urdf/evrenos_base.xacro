@@ -4,7 +4,7 @@
 
   <!-- EVRENOS simplified physical chassis -->
 
-  <xacro:property name="vehicle_scale" value="0.80"/>
+  <xacro:property name="vehicle_scale" value="1.00"/>
 
   <xacro:property name="base_length" value="${1.05 * vehicle_scale}"/>
   <xacro:property name="base_width"  value="${0.78 * vehicle_scale}"/>

@@ -5,7 +5,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command
+from launch.substitutions import Command, PathJoinSubstitution
 
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -29,6 +29,13 @@ def generate_launch_description():
     # Files
     # -----------------------------------------------------
 
+    world_arg = DeclareLaunchArgument(
+        "world",
+        default_value="evrenos_competition.world",
+    )
+
+    world_name = LaunchConfiguration("world")
+
     slam_arg = DeclareLaunchArgument(
         "slam",
         default_value="false",
@@ -49,10 +56,8 @@ def generate_launch_description():
         "evrenos_robot.urdf.xacro",
     )
 
-    world_file = os.path.join(
-        simulation_share,
-        "worlds",
-        "evrenos_competition.world",
+    world_file = PathJoinSubstitution(
+        [simulation_share, "worlds", world_name]
     )
 
     ekf_config = os.path.join(
@@ -264,6 +269,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            world_arg,
             slam_arg,
             rviz_arg,
             gazebo,
