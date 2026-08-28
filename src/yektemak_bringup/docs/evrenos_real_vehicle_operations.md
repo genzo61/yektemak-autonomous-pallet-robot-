@@ -83,6 +83,46 @@ ros2 run nav2_map_server map_saver_cli \
 Confirm that both `evrenos_site.yaml` and its referenced image file exist
 before stopping the mapping launch.
 
+## 3b. Watch the map from a laptop (RViz), keep Jetson headless
+
+`evrenos_real_mapping.launch.py` and `evrenos_real_nav2.launch.py` never
+start RViz on the vehicle computer on purpose - running RViz locally on the
+Jetson competes with SLAM/Nav2 for CPU/GPU and visibly lags. Run RViz on a
+separate laptop on the same network instead:
+
+```bash
+source /opt/ros/humble/setup.bash
+# If the laptop has this workspace built too, also:
+# source ~/yektemak_ws/install/setup.bash
+
+rviz2 -d ~/yektemak_ws/install/yektemak_bringup/share/yektemak_bringup/rviz/evrenos_real_mapping.rviz
+```
+
+This config opens with Fixed Frame `map` and the `Map`, `LaserScan`,
+`RobotModel`, and `TF` displays already added (a disabled `PointCloud2`
+display pointed at `/unilidar/cloud` is included too, toggle it on only
+when you specifically need to debug the raw cloud - keeping it off saves
+bandwidth over the link).
+
+For RViz on the laptop to actually see topics published on the Jetson:
+
+- Both machines must be on the **same `ROS_DOMAIN_ID`**. If neither side
+  sets the environment variable, both default to `0` and this is a
+  non-issue; if either machine exports `ROS_DOMAIN_ID` in its `.bashrc`,
+  make sure the other one matches.
+- Both machines need to be reachable for ROS 2's DDS discovery traffic
+  (multicast on the local network by default). If they only ever see each
+  other's `SSH`/`ping` traffic but no topics show up in
+  `ros2 topic list` from the laptop, check that neither machine's firewall
+  (e.g. `ufw`) is blocking UDP, and that you are on the vehicle's local
+  Wi-Fi/router and not routed through Tailscale for this step (Tailscale
+  is fine for SSH, but DDS multicast discovery generally does not traverse
+  it without extra configuration).
+- Quick check before opening RViz:
+  `ros2 topic list` from the laptop should already show `/map`, `/scan`,
+  `/tf` while the mapping launch is running on the Jetson. If it shows
+  nothing, fix discovery before troubleshooting RViz itself.
+
 ## 4. Nav2 localization with the saved map
 
 Start localization with motion disabled first:
@@ -176,6 +216,14 @@ and the complete preflight has been repeated.
 
 ## Real-vehicle preflight order
 
+0. Confirm the RC transmitter's mode switch is set to **manual**, not
+   autonomous, before any mapping run where a person will drive by RC.
+   Mode arbitration happens in firmware on an SBUS channel; if the switch
+   is left in the autonomous position, RC stick inputs are ignored even
+   though the RC link itself looks fine on the transmitter. Also confirm
+   the RC link stays powered and connected for the whole session -
+   firmware fail-stops the vehicle on SBUS signal loss even in autonomous
+   mode, independent of the Jetson/ROS watchdog.
 1. Secure the test area, use wheel stands for the first powered test, appoint
    a spotter, and verify the physical emergency stop actually removes motor
    power.
