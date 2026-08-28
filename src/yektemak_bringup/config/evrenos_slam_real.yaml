@@ -62,7 +62,7 @@ slam_toolbox:
     enable_interactive_mode: true
 
     # Async mode
-    scan_queue_size: 1
+    scan_queue_size: 10
 
 
     # ----------------------------------

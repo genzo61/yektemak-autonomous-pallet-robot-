@@ -17,6 +17,7 @@ ekf_filter_node:
 
     frequency: 30.0
     sensor_timeout: 0.2
+    transform_time_offset: 0.05
 
     two_d_mode: true
 
