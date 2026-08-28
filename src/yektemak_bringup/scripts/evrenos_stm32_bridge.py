@@ -39,9 +39,18 @@ class EvrenosSTM32Bridge(Node):
         self.declare_parameter('odom_frame', 'odom')
         self.declare_parameter('base_frame', 'base_footprint')
 
-        # Simulation value for now.
-        # TODO: Measure / tune on real EVRENOS.
-        self.declare_parameter('track_width', 1.065)
+        # Synced with firmware: main.c EKSEN_ACIKLIGI_METRE (1.11f).
+        # This MUST stay equal to the firmware constant - it is the same
+        # physical measurement (wheel center-to-center distance) used on
+        # both sides: firmware uses it to convert cmd_vel -> per-wheel
+        # target speed, this node uses it to convert per-wheel encoder
+        # speed -> angular_velocity for /wheel/odom. If they diverge,
+        # commanded turn rate and estimated turn rate both drift, in
+        # different amounts, which shows up as feedable SLAM/EKF error.
+        # TODO: confirm 1.11 against a real 360-degree turn calibration
+        # test and update BOTH this value and main.c together if it
+        # changes.
+        self.declare_parameter('track_width', 1.11)
 
         self.declare_parameter('publish_rate', 20.0)
         self.declare_parameter('watchdog_timeout', 0.5)
@@ -232,8 +241,9 @@ class EvrenosSTM32Bridge(Node):
         )
 
         self.get_logger().warn(
-            f'Using prototype track_width={self.track_width:.3f} m. '
-            'Measure/tune this on the real vehicle.'
+            f'track_width={self.track_width:.3f} m '
+            '(synced with firmware EKSEN_ACIKLIGI_METRE). '
+            'Re-verify with a real 360-degree turn test.'
         )
 
     # ================================================================

@@ -51,10 +51,11 @@ def generate_launch_description():
 
     track_width_arg = DeclareLaunchArgument(
         'track_width',
-        default_value='1.065',
+        default_value='1.11',
         description=(
             'Effective skid-steer track width in meters. '
-            'Prototype value; measure/tune on real EVRENOS.'
+            'Synced with firmware EKSEN_ACIKLIGI_METRE; '
+            're-verify with a real 360-degree turn test.'
         )
     )
 
