@@ -1,27 +1,20 @@
 <?xml version="1.0"?>
+<robot name="yektemak_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-<robot
-  name="yektemak_robot"
-  xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Gazebo eklentilerini (sürüş, sensör, ros2_control) dahil et.
+       RVizde sadece modeli gormek icin use_sim argumanini false verin -->
+  <xacro:arg name="use_sim" default="true"/>
 
-  <!-- Renk tanımları -->
   <xacro:include filename="yektemak_materials.xacro"/>
-
-  <!-- Ana gövde -->
   <xacro:include filename="yektemak_base.xacro"/>
-
-  <!-- Dört teker -->
   <xacro:include filename="yektemak_wheels.xacro"/>
-
-  <!-- Palet kaldırma platformu -->
   <xacro:include filename="yektemak_lift.xacro"/>
-
-  <!-- Ön yön işareti -->
   <xacro:include filename="yektemak_markers.xacro"/>
+  <xacro:include filename="yektemak_sensors.xacro"/>
 
-  <!-- Kaldırma sistemi ROS 2 Control arayüzü -->
-  <xacro:include filename="yektemak_ros2_control.xacro"/>
+  <xacro:if value="$(arg use_sim)">
+    <xacro:include filename="yektemak_ros2_control.xacro"/>
+    <xacro:include filename="yektemak_gazebo.xacro"/>
+  </xacro:if>
 
-  <!-- Gazebo fizik ve görünüm ayarları -->
-  <xacro:include filename="yektemak_gazebo.xacro"/>
 </robot>

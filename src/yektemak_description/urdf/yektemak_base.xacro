@@ -11,7 +11,7 @@
   <xacro:property name="base_ground_clearance" value="0.04"/>
 
   <!-- Yaklaşık gövde kütlesi -->
-  <xacro:property name="base_mass" value="35.0"/>
+  <xacro:property name="base_mass" value="80.0"/>
 
   <!-- Zemindeki referans noktası -->
   <link name="base_footprint"/>

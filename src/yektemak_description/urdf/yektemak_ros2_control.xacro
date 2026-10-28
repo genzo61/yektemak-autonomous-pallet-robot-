@@ -1,4 +1,15 @@
+<?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    Gazebo ros2_control arayüzü
+    - lift_platform_joint - position_pid komut arayüzü. Gazebo eklemi
+      kuvvetle (PID) sürer; yüklü palette gerçekçi davranır.
+      Not - position_pid dışarıya "position" adıyla açılır, bu yüzden
+      position_controllers/JointGroupPositionController ile çalışır.
+    - Tekerlekler - sadece durum arayüzü (joint_states / TF için).
+      Sürüşü gazebo_ros_planar_move yapar.
+  -->
 
   <ros2_control name="YektemakGazeboSystem" type="system">
 
@@ -6,28 +17,36 @@
       <plugin>gazebo_ros2_control/GazeboSystem</plugin>
     </hardware>
 
-  <joint name="lift_platform_joint">
+    <joint name="lift_platform_joint">
+      <!-- gazebo_ros2_control pos_ onekli parametreleri PID kazanci olarak okur.
+           Kazanclar 6 kg platform + 55 kg yuklu palet icin ayarlandi
+           (dogal frekans ~26 rad/s, sonum orani ~0.65). -->
+      <param name="pos_kp">40000.0</param>
+      <param name="pos_ki">8000.0</param>
+      <param name="pos_kd">2000.0</param>
+      <param name="pos_max_integral_error">3000.0</param>
+      <command_interface name="position_pid">
+        <param name="min">0.0</param>
+        <param name="max">${lift_max_height}</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
 
-    <param name="pos_kp">6000.0</param>
-    <param name="pos_ki">50.0</param>
-    <param name="pos_kd">150.0</param>
-    <param name="pos_max_integral_error">100.0</param>
+    <xacro:macro name="wheel_state_only" params="name">
+      <joint name="${name}_wheel_joint">
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+    </xacro:macro>
 
-    <command_interface name="position_pid">
-      <param name="min">0.0</param>
-      <param name="max">0.10</param>
-    </command_interface>
-
-    <state_interface name="position">
-      <param name="initial_value">0.0</param>
-    </state_interface>
-
-    <state_interface name="velocity"/>
-    <state_interface name="effort"/>
-
-  </joint>
+    <xacro:wheel_state_only name="front_left"/>
+    <xacro:wheel_state_only name="front_right"/>
+    <xacro:wheel_state_only name="rear_left"/>
+    <xacro:wheel_state_only name="rear_right"/>
 
   </ros2_control>
 
 </robot>
-

@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>yektemak_description</name>
-  <version>0.0.0</version>
+  <version>0.2.0</version>
   <description>Yektemak robot URDF and visualization files</description>
   <maintainer email="haydar.ali61@hotmail.com">ali</maintainer>
   <license>Apache-2.0</license>

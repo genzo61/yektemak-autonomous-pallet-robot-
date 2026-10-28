@@ -1,94 +1,177 @@
+<?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ================= Görünüm ve sürtünme ================= -->
 
   <gazebo reference="base_link">
     <material>Gazebo/Blue</material>
   </gazebo>
 
-  <gazebo reference="front_left_wheel_link">
-    <material>Gazebo/Black</material>
-    <mu1>1.0</mu1>
-    <mu2>1.0</mu2>
-    <kp>1000000.0</kp>
-    <kd>100.0</kd>
-  </gazebo>
+  <!-- planar_move tum linklerin hizini her adimda kendisi ayarlar ve
+       tekerlerin donmesine izin vermez. Bu yuzden teker-zemin surtunmesi
+       dusuk tutulur; aksi halde tekerler fren yapar ve yuklu robot one/arkaya
+       devrilmeye calisir. Surus dinamigini planar_move belirler. -->
+  <xacro:macro name="wheel_gazebo" params="name">
+    <gazebo reference="${name}_wheel_link">
+      <material>Gazebo/DarkGrey</material>
+      <mu1>0.02</mu1>
+      <mu2>0.02</mu2>
+      <kp>1000000.0</kp>
+      <kd>100.0</kd>
+    </gazebo>
+  </xacro:macro>
 
-  <gazebo reference="front_right_wheel_link">
-    <material>Gazebo/Black</material>
-    <mu1>1.0</mu1>
-    <mu2>1.0</mu2>
-    <kp>1000000.0</kp>
-    <kd>100.0</kd>
-  </gazebo>
+  <xacro:wheel_gazebo name="front_left"/>
+  <xacro:wheel_gazebo name="front_right"/>
+  <xacro:wheel_gazebo name="rear_left"/>
+  <xacro:wheel_gazebo name="rear_right"/>
 
-  <gazebo reference="rear_left_wheel_link">
-    <material>Gazebo/Black</material>
-    <mu1>1.0</mu1>
-    <mu2>1.0</mu2>
-    <kp>1000000.0</kp>
-    <kd>100.0</kd>
-  </gazebo>
-
-  <gazebo reference="rear_right_wheel_link">
-    <material>Gazebo/Black</material>
-    <mu1>1.0</mu1>
-    <mu2>1.0</mu2>
-    <kp>1000000.0</kp>
-    <kd>100.0</kd>
-  </gazebo>
-
+  <!-- Paleti kaydırmadan taşımak için yüksek sürtünmeli üst yüzey -->
   <gazebo reference="lift_platform_link">
     <material>Gazebo/Yellow</material>
-
-    <mu1>10.0</mu1>
-    <mu2>10.0</mu2>
-
-    <kp>1000000.0</kp>
-    <kd>100.0</kd>
-
-    <minDepth>0.001</minDepth>
-    <maxVel>0.01</maxVel>
+    <mu1>1.2</mu1>
+    <mu2>1.2</mu2>
   </gazebo>
 
   <gazebo reference="front_marker_link">
     <material>Gazebo/Red</material>
-
   </gazebo>
-    <gazebo>
-    <plugin
-      name="yektemak_planar_move"
-      filename="libgazebo_ros_planar_move.so">
 
+  <gazebo reference="lidar_link">
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+
+  <gazebo reference="lidar_bracket_link">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
+  <!-- ================= Sürüş =================
+       planar_move gövdeyi doğrudan hız komutuyla sürer; 4 tekerli skid-steer
+       temasından çok daha kararlıdır. Navigasyon tarafında vy = 0 tutulur,
+       yani robot diferansiyel sürüşlü gibi davranır (gerçek araca uygun).
+  -->
+  <gazebo>
+    <plugin name="yektemak_planar_move" filename="libgazebo_ros_planar_move.so">
       <ros>
         <namespace>/</namespace>
-        <remapping>cmd_vel:=cmd_vel</remapping>
-        <remapping>odom:=odom</remapping>
       </ros>
-
-      <update_rate>100.0</update_rate>
+      <!-- Her fizik adiminda (1 kHz) hiz uygulanir; yukluyken devrilmeyi onler -->
+      <update_rate>1000.0</update_rate>
       <publish_rate>50.0</publish_rate>
-
       <publish_odom>true</publish_odom>
       <publish_odom_tf>true</publish_odom_tf>
-
       <odometry_frame>odom</odometry_frame>
       <robot_base_frame>base_footprint</robot_base_frame>
-
+      <covariance_x>0.0001</covariance_x>
+      <covariance_y>0.0001</covariance_y>
+      <covariance_yaw>0.001</covariance_yaw>
     </plugin>
   </gazebo>
-    <!-- Kaldırma platformu için ROS 2 Control -->
-  <gazebo>
-    <plugin
-      name="gazebo_ros2_control"
-      filename="libgazebo_ros2_control.so">
 
+  <!-- ================= Lift - ros2_control ================= -->
+  <gazebo>
+    <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
       <robot_param>robot_description</robot_param>
       <robot_param_node>robot_state_publisher</robot_param_node>
-
-      <parameters>
-        $(find yektemak_gazebo)/config/controllers.yaml
-      </parameters>
-
+      <parameters>$(find yektemak_description)/config/ros2_controllers.yaml</parameters>
     </plugin>
   </gazebo>
-  
+
+  <!-- ================= Palet baglayici =================
+       Lift kalkinca /pallet_attacher/attach (data true) ile ustteki palet
+       robota kilitlenir, indirince (data false) birakilir.
+       Kaynak - yektemak_gazebo_plugins paketi -->
+  <gazebo>
+    <plugin name="pallet_attacher" filename="libyektemak_pallet_attacher.so">
+      <ros>
+        <namespace>/</namespace>
+      </ros>
+      <parent_link>lift_platform_link</parent_link>
+      <target_prefix>pallet</target_prefix>
+      <max_xy_distance>0.25</max_xy_distance>
+      <max_yaw_error>0.35</max_yaw_error>
+    </plugin>
+  </gazebo>
+
+  <!-- ================= 2D LiDAR =================
+       Ön tamponda, +-100 derece görüş. Daha geniş açı gövdeye/tekerlere çarpar.
+  -->
+  <gazebo reference="lidar_link">
+    <sensor name="front_lidar" type="ray">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <update_rate>10.0</update_rate>
+      <pose>0 0 0 0 0 0</pose>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>401</samples>
+            <resolution>1</resolution>
+            <min_angle>-1.745329</min_angle>
+            <max_angle>1.745329</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.10</min>
+          <max>20.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.005</stddev>
+        </noise>
+      </ray>
+      <plugin name="front_lidar_plugin" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <namespace>/</namespace>
+          <remapping>~/out:=scan_raw</remapping>
+        </ros>
+        <output_type>sensor_msgs/LaserScan</output_type>
+        <frame_name>lidar_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ================= IMU ================= -->
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100.0</update_rate>
+      <visualize>false</visualize>
+      <imu>
+        <angular_velocity>
+          <z>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.0005</stddev>
+            </noise>
+          </z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.01</stddev>
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.01</stddev>
+            </noise>
+          </y>
+        </linear_acceleration>
+      </imu>
+      <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <namespace>/</namespace>
+          <remapping>~/out:=imu/data</remapping>
+        </ros>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        <frame_name>imu_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
 </robot>

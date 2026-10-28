@@ -29,7 +29,7 @@ def generate_launch_description():
     )
 
     robot_description = ParameterValue(
-        Command(["xacro ", xacro_file]),
+        Command(["xacro ", xacro_file, " use_sim:=false"]),
         value_type=str,
     )
 

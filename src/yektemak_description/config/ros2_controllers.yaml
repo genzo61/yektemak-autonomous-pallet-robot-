@@ -6,11 +6,12 @@ controller_manager:
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    lift_position_controller:
+    lift_controller:
       type: position_controllers/JointGroupPositionController
 
-
-lift_position_controller:
+# Kullanım:
+#   ros2 topic pub --once /lift_controller/commands std_msgs/msg/Float64MultiArray "{data: [0.10]}"
+lift_controller:
   ros__parameters:
     joints:
       - lift_platform_joint
