@@ -1,0 +1,39 @@
+# Yektemak gorev tanimi
+# Istasyon pozu = palet merkezi ve robotun palete girerken bakacagi yon
+#   [x (m), y (m), yaw (rad)]  -- harita (map) cercevesinde
+# Konumlar yektemak_gazebo/worlds/warehouse.world ile ayni.
+mission_manager:
+  ros__parameters:
+    use_sim_time: true
+
+    home: [0.0, 0.0, 0.0]
+
+    station_names: ["pick_1", "pick_2", "drop_1", "drop_2"]
+    stations:
+      pick_1: [3.0, 1.5, 0.0]
+      pick_2: [3.0, -1.5, 0.0]
+      drop_1: [14.5, 1.5, 0.0]
+      drop_2: [14.5, -1.5, 0.0]
+
+    # Sirayla calistirilacak gorevler ("alma:birakma")
+    tasks: ["pick_1:drop_1", "pick_2:drop_2"]
+    return_home: true
+
+    # Docking
+    predock_distance: 1.8        # palet merkezinden hazirlik noktasina (m)
+    lidar_x: 0.47                # LiDAR'in base_footprint'e gore ileri konumu (m)
+    dock_speed: 0.12
+    dock_gate_lateral: 0.035     # raylarin arasina girmeden izin verilen yanal hata (m)
+    dock_gate_heading: 0.05      # izin verilen aci hatasi (rad)
+    dock_retries: 2
+    undock_distance: 1.15
+
+    # Lift (m)
+    lift_up: 0.10
+    lift_release: 0.045
+
+    # Yuklu mod
+    loaded_speed_percent: 60.0
+    # [on_x, sol_y, arka_x, sag_y]
+    footprint_empty: [0.52, 0.25, -0.42, -0.25]
+    footprint_loaded: [0.62, 0.42, -0.62, -0.42]
