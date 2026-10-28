@@ -1,0 +1,152 @@
+<?xml version="1.0"?>
+<!--
+  Yektemak depo dünyası (20 x 12 m)
+    - Robot park alanı : (0, 0)
+    - Alma istasyonları (yeşil)  : pick_1 (3.0, 1.5), pick_2 (3.0, -1.5)
+    - Bırakma istasyonları (mavi): drop_1 (14.5, 1.5), drop_2 (14.5, -1.5)
+    - 4 raf, 3 kolon, ana koridor genişliği ~4.7 m
+  Konumlar yektemak_tasks/config/mission.yaml ile aynı olmalı.
+-->
+<sdf version="1.6">
+  <world name="yektemak_warehouse">
+
+    <gravity>0 0 -9.81</gravity>
+
+    <!-- /gazebo/get_entity_state ve /gazebo/set_entity_state servisleri -->
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
+      <ros>
+        <namespace>/gazebo</namespace>
+      </ros>
+      <update_rate>20.0</update_rate>
+    </plugin>
+
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <scene>
+      <ambient>0.55 0.55 0.55 1</ambient>
+      <background>0.70 0.75 0.80 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.4 0.3 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>60 60</size></plane></geometry>
+          <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
+        </collision>
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry><plane><normal>0 0 1</normal><size>60 60</size></plane></geometry>
+          <material><ambient>0.44 0.46 0.46 1</ambient><diffuse>0.55 0.57 0.58 1</diffuse><specular>0.1 0.1 0.1 1</specular></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="warehouse_building">
+      <static>true</static>
+      <link name="link">
+<collision name="wall_south_col"><pose>8 -6.1 1.25 0 0 0</pose><geometry><box><size>20.4 0.2 2.5</size></box></geometry></collision>
+<visual name="wall_south_vis"><pose>8 -6.1 1.25 0 0 0</pose><geometry><box><size>20.4 0.2 2.5</size></box></geometry><material><ambient>0.64 0.64 0.61 1</ambient><diffuse>0.8 0.8 0.76 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<collision name="wall_north_col"><pose>8 6.1 1.25 0 0 0</pose><geometry><box><size>20.4 0.2 2.5</size></box></geometry></collision>
+<visual name="wall_north_vis"><pose>8 6.1 1.25 0 0 0</pose><geometry><box><size>20.4 0.2 2.5</size></box></geometry><material><ambient>0.64 0.64 0.61 1</ambient><diffuse>0.8 0.8 0.76 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<collision name="wall_west_col"><pose>-2.1 0 1.25 0 0 0</pose><geometry><box><size>0.2 12 2.5</size></box></geometry></collision>
+<visual name="wall_west_vis"><pose>-2.1 0 1.25 0 0 0</pose><geometry><box><size>0.2 12 2.5</size></box></geometry><material><ambient>0.64 0.64 0.61 1</ambient><diffuse>0.8 0.8 0.76 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<collision name="wall_east_col"><pose>18.1 0 1.25 0 0 0</pose><geometry><box><size>0.2 12 2.5</size></box></geometry></collision>
+<visual name="wall_east_vis"><pose>18.1 0 1.25 0 0 0</pose><geometry><box><size>0.2 12 2.5</size></box></geometry><material><ambient>0.64 0.64 0.61 1</ambient><diffuse>0.8 0.8 0.76 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<collision name="column_0_col"><pose>8 0 1.25 0 0 0</pose><geometry><box><size>0.4 0.4 2.5</size></box></geometry></collision>
+<visual name="column_0_vis"><pose>8 0 1.25 0 0 0</pose><geometry><box><size>0.4 0.4 2.5</size></box></geometry><material><ambient>0.56 0.56 0.56 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<collision name="column_guard_0_col"><pose>8 0 0.15 0 0 0</pose><geometry><box><size>0.5 0.5 0.3</size></box></geometry></collision>
+<visual name="column_guard_0_vis"><pose>8 0 0.15 0 0 0</pose><geometry><box><size>0.5 0.5 0.3</size></box></geometry><material><ambient>0.76 0.64 0.04 1</ambient><diffuse>0.95 0.8 0.05 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<collision name="column_1_col"><pose>8 4.9 1.25 0 0 0</pose><geometry><box><size>0.4 0.4 2.5</size></box></geometry></collision>
+<visual name="column_1_vis"><pose>8 4.9 1.25 0 0 0</pose><geometry><box><size>0.4 0.4 2.5</size></box></geometry><material><ambient>0.56 0.56 0.56 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<collision name="column_guard_1_col"><pose>8 4.9 0.15 0 0 0</pose><geometry><box><size>0.5 0.5 0.3</size></box></geometry></collision>
+<visual name="column_guard_1_vis"><pose>8 4.9 0.15 0 0 0</pose><geometry><box><size>0.5 0.5 0.3</size></box></geometry><material><ambient>0.76 0.64 0.04 1</ambient><diffuse>0.95 0.8 0.05 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<collision name="column_2_col"><pose>8 -4.9 1.25 0 0 0</pose><geometry><box><size>0.4 0.4 2.5</size></box></geometry></collision>
+<visual name="column_2_vis"><pose>8 -4.9 1.25 0 0 0</pose><geometry><box><size>0.4 0.4 2.5</size></box></geometry><material><ambient>0.56 0.56 0.56 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<collision name="column_guard_2_col"><pose>8 -4.9 0.15 0 0 0</pose><geometry><box><size>0.5 0.5 0.3</size></box></geometry></collision>
+<visual name="column_guard_2_vis"><pose>8 -4.9 0.15 0 0 0</pose><geometry><box><size>0.5 0.5 0.3</size></box></geometry><material><ambient>0.76 0.64 0.04 1</ambient><diffuse>0.95 0.8 0.05 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      </link>
+    </model>
+
+    <model name="floor_markings">
+      <static>true</static>
+      <link name="link">
+<visual name="pick_1_a_vis"><pose>3 2 0.002 0 0 0</pose><geometry><box><size>1.46 0.06 0.002</size></box></geometry><material><ambient>0.12 0.56 0.24 1</ambient><diffuse>0.15 0.7 0.3 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="pick_1_b_vis"><pose>3 1 0.002 0 0 0</pose><geometry><box><size>1.46 0.06 0.002</size></box></geometry><material><ambient>0.12 0.56 0.24 1</ambient><diffuse>0.15 0.7 0.3 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="pick_1_c_vis"><pose>3.7 1.5 0.002 0 0 0</pose><geometry><box><size>0.06 1 0.002</size></box></geometry><material><ambient>0.12 0.56 0.24 1</ambient><diffuse>0.15 0.7 0.3 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="pick_1_d_vis"><pose>2.3 1.5 0.002 0 0 0</pose><geometry><box><size>0.06 1 0.002</size></box></geometry><material><ambient>0.12 0.56 0.24 1</ambient><diffuse>0.15 0.7 0.3 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="pick_2_a_vis"><pose>3 -1 0.002 0 0 0</pose><geometry><box><size>1.46 0.06 0.002</size></box></geometry><material><ambient>0.12 0.56 0.24 1</ambient><diffuse>0.15 0.7 0.3 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="pick_2_b_vis"><pose>3 -2 0.002 0 0 0</pose><geometry><box><size>1.46 0.06 0.002</size></box></geometry><material><ambient>0.12 0.56 0.24 1</ambient><diffuse>0.15 0.7 0.3 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="pick_2_c_vis"><pose>3.7 -1.5 0.002 0 0 0</pose><geometry><box><size>0.06 1 0.002</size></box></geometry><material><ambient>0.12 0.56 0.24 1</ambient><diffuse>0.15 0.7 0.3 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="pick_2_d_vis"><pose>2.3 -1.5 0.002 0 0 0</pose><geometry><box><size>0.06 1 0.002</size></box></geometry><material><ambient>0.12 0.56 0.24 1</ambient><diffuse>0.15 0.7 0.3 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="drop_1_a_vis"><pose>14.5 2 0.002 0 0 0</pose><geometry><box><size>1.46 0.06 0.002</size></box></geometry><material><ambient>0.12 0.36 0.72 1</ambient><diffuse>0.15 0.45 0.9 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="drop_1_b_vis"><pose>14.5 1 0.002 0 0 0</pose><geometry><box><size>1.46 0.06 0.002</size></box></geometry><material><ambient>0.12 0.36 0.72 1</ambient><diffuse>0.15 0.45 0.9 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="drop_1_c_vis"><pose>15.2 1.5 0.002 0 0 0</pose><geometry><box><size>0.06 1 0.002</size></box></geometry><material><ambient>0.12 0.36 0.72 1</ambient><diffuse>0.15 0.45 0.9 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="drop_1_d_vis"><pose>13.8 1.5 0.002 0 0 0</pose><geometry><box><size>0.06 1 0.002</size></box></geometry><material><ambient>0.12 0.36 0.72 1</ambient><diffuse>0.15 0.45 0.9 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="drop_2_a_vis"><pose>14.5 -1 0.002 0 0 0</pose><geometry><box><size>1.46 0.06 0.002</size></box></geometry><material><ambient>0.12 0.36 0.72 1</ambient><diffuse>0.15 0.45 0.9 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="drop_2_b_vis"><pose>14.5 -2 0.002 0 0 0</pose><geometry><box><size>1.46 0.06 0.002</size></box></geometry><material><ambient>0.12 0.36 0.72 1</ambient><diffuse>0.15 0.45 0.9 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="drop_2_c_vis"><pose>15.2 -1.5 0.002 0 0 0</pose><geometry><box><size>0.06 1 0.002</size></box></geometry><material><ambient>0.12 0.36 0.72 1</ambient><diffuse>0.15 0.45 0.9 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="drop_2_d_vis"><pose>13.8 -1.5 0.002 0 0 0</pose><geometry><box><size>0.06 1 0.002</size></box></geometry><material><ambient>0.12 0.36 0.72 1</ambient><diffuse>0.15 0.45 0.9 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="home_a_vis"><pose>0 0.4 0.002 0 0 0</pose><geometry><box><size>1.16 0.06 0.002</size></box></geometry><material><ambient>0.78 0.66 0.04 1</ambient><diffuse>0.98 0.82 0.05 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="home_b_vis"><pose>0 -0.4 0.002 0 0 0</pose><geometry><box><size>1.16 0.06 0.002</size></box></geometry><material><ambient>0.78 0.66 0.04 1</ambient><diffuse>0.98 0.82 0.05 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="home_c_vis"><pose>0.55 0 0.002 0 0 0</pose><geometry><box><size>0.06 0.8 0.002</size></box></geometry><material><ambient>0.78 0.66 0.04 1</ambient><diffuse>0.98 0.82 0.05 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="home_d_vis"><pose>-0.55 0 0.002 0 0 0</pose><geometry><box><size>0.06 0.8 0.002</size></box></geometry><material><ambient>0.78 0.66 0.04 1</ambient><diffuse>0.98 0.82 0.05 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="lane_0_vis"><pose>8 2.35 0.002 0 0 0</pose><geometry><box><size>17 0.08 0.002</size></box></geometry><material><ambient>0.78 0.66 0.04 1</ambient><diffuse>0.98 0.82 0.05 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+<visual name="lane_1_vis"><pose>8 -2.35 0.002 0 0 0</pose><geometry><box><size>17 0.08 0.002</size></box></geometry><material><ambient>0.78 0.66 0.04 1</ambient><diffuse>0.98 0.82 0.05 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      </link>
+    </model>
+
+    <include>
+      <uri>model://yektemak_warehouse_rack</uri>
+      <name>rack_1</name>
+      <pose>5.5 3.0 0 0 0 0.0</pose>
+    </include>
+    <include>
+      <uri>model://yektemak_warehouse_rack</uri>
+      <name>rack_2</name>
+      <pose>10.5 3.0 0 0 0 0.0</pose>
+    </include>
+    <include>
+      <uri>model://yektemak_warehouse_rack</uri>
+      <name>rack_3</name>
+      <pose>5.5 -3.0 0 0 0 0.0</pose>
+    </include>
+    <include>
+      <uri>model://yektemak_warehouse_rack</uri>
+      <name>rack_4</name>
+      <pose>10.5 -3.0 0 0 0 0.0</pose>
+    </include>
+
+    <include>
+      <uri>model://yektemak_pallet</uri>
+      <name>pallet_1</name>
+      <pose>3.0 1.5 0 0 0 0.0</pose>
+    </include>
+    <include>
+      <uri>model://yektemak_pallet</uri>
+      <name>pallet_2</name>
+      <pose>3.0 -1.5 0 0 0 0.0</pose>
+    </include>
+
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <pose>-4.5 -10.5 9.0 0 0.62 0.85</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+
+  </world>
+</sdf>

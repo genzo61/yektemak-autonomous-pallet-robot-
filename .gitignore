@@ -27,3 +27,6 @@ Makefile
 *.swp
 *.swo
 .DS_Store
+
+# pytest
+.pytest_cache/

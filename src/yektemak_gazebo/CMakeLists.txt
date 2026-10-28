@@ -4,11 +4,7 @@ project(yektemak_gazebo)
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY
-    config
-    launch
-    models
-    worlds
+  DIRECTORY launch models worlds
   DESTINATION share/${PROJECT_NAME}
 )
 
