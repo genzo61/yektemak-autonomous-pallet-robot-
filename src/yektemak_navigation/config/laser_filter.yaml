@@ -1,0 +1,20 @@
+# /scan_raw -> /scan
+# Robotun etrafindaki palet izdusumu kadar alani scan'den cikarir.
+# Neden? Palet yukluyken LiDAR paletin iki rayini cok yakindan gorur;
+# bunlar haritaya ve costmap'e "engel" olarak girmesin.
+# Docking dugumu ise ham /scan_raw kullanir, cunku rayları gormesi gerekir.
+scan_to_scan_filter_chain:
+  ros__parameters:
+    use_sim_time: true
+    filter1:
+      name: pallet_box_filter
+      type: laser_filters/LaserScanBoxFilter
+      params:
+        box_frame: base_footprint
+        min_x: -0.66
+        max_x: 0.66
+        min_y: -0.46
+        max_y: 0.46
+        min_z: -0.5
+        max_z: 1.5
+        invert: false

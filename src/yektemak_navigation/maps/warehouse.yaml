@@ -1,0 +1,11 @@
+image: warehouse.pgm
+mode: trinary
+resolution: 0.05
+origin: [-2.04, -6.04, 0]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.25
+
+# slam_toolbox + map_explorer ile cikarildi. Palet istasyonlari
+# (pick_1, pick_2, drop_1, drop_2) haritada bilerek bos birakildi;
+# paletleri navigasyon sirasinda LiDAR anlik olarak gorur.
