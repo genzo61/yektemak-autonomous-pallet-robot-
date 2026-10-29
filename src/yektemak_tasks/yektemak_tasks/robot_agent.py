@@ -54,7 +54,8 @@ class RobotAgent(MissionManager):
         self.map_offset = None     # odom -> map (dx, dy, dyaw)
         self.last_odom_xy = None
         self.last_t = time.time()
-        self.at_home = False
+        self.returning = False
+        self.idle_since = None
 
         latched = QoSProfile(depth=1, reliability=ReliabilityPolicy.RELIABLE,
                              durability=DurabilityPolicy.TRANSIENT_LOCAL)
@@ -146,6 +147,12 @@ class RobotAgent(MissionManager):
 
     def nav_paused(self):
         return self.estop
+
+    def on_nav_tick(self):
+        # Park alanina donerken yeni gorev geldiyse donusu yarida kes
+        if self.returning and self.pending:
+            self.cancelTask()
+            raise MissionError("yeni gorev geldi")
 
     # ------------------------------------------------------------------ bolge kilitleri
     def zone_msg(self, zone, op):
@@ -255,6 +262,17 @@ class RobotAgent(MissionManager):
                 self.state = "charging" if at_home and self.battery < 99.5 else "idle"
                 if self.state == "charging":
                     self.step = f"Sarj oluyor (%{self.battery:.0f})"
+                # Is bitti, yeni gorev yok: istasyon sirasini bosaltmak ve sarj olmak
+                # icin park alanina don (bolge kilidi robot uzaklasinca birakilir).
+                if (not at_home and self.idle_since is not None
+                        and self.sim_now() - self.idle_since > 3.0):
+                    self.returning, self.idle_since = True, None
+                    self.step = "Park alanina donuyor"
+                    try:
+                        self.navigate(x, y, yaw, "park alani")
+                    except MissionError:
+                        pass
+                    self.returning = False
                 self.spin_for(0.2)
                 continue
             t = self.pending.pop(0)
@@ -265,6 +283,7 @@ class RobotAgent(MissionManager):
             res["robot"] = self.name
             self.result_pub.publish(String(data=json.dumps(res)))
             self.task, self.state = None, "idle"
+            self.idle_since = self.sim_now()
             self.say(f"Gorev {t['id']} {'tamamlandi' if res['ok'] else 'basarisiz: ' + res['message']}")
 
 
