@@ -4,7 +4,7 @@
   <!-- ================= Görünüm ve sürtünme ================= -->
 
   <gazebo reference="base_link">
-    <material>Gazebo/Blue</material>
+    <material>Gazebo/${body_color}</material>
   </gazebo>
 
   <!-- planar_move tum linklerin hizini her adimda kendisi ayarlar ve
@@ -51,17 +51,17 @@
        yani robot diferansiyel sürüşlü gibi davranır (gerçek araca uygun).
   -->
   <gazebo>
-    <plugin name="yektemak_planar_move" filename="libgazebo_ros_planar_move.so">
+    <plugin name="${ns}planar_move" filename="libgazebo_ros_planar_move.so">
       <ros>
-        <namespace>/</namespace>
+        <namespace>/${ns}</namespace>
       </ros>
       <!-- Her fizik adiminda (1 kHz) hiz uygulanir; yukluyken devrilmeyi onler -->
       <update_rate>1000.0</update_rate>
       <publish_rate>50.0</publish_rate>
       <publish_odom>true</publish_odom>
       <publish_odom_tf>true</publish_odom_tf>
-      <odometry_frame>odom</odometry_frame>
-      <robot_base_frame>base_footprint</robot_base_frame>
+      <odometry_frame>${prefix}odom</odometry_frame>
+      <robot_base_frame>${prefix}base_footprint</robot_base_frame>
       <covariance_x>0.0001</covariance_x>
       <covariance_y>0.0001</covariance_y>
       <covariance_yaw>0.001</covariance_yaw>
@@ -71,6 +71,9 @@
   <!-- ================= Lift - ros2_control ================= -->
   <gazebo>
     <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+      <ros>
+        <namespace>/${ns}</namespace>
+      </ros>
       <robot_param>robot_description</robot_param>
       <robot_param_node>robot_state_publisher</robot_param_node>
       <parameters>$(find yektemak_description)/config/ros2_controllers.yaml</parameters>
@@ -82,9 +85,9 @@
        robota kilitlenir, indirince (data false) birakilir.
        Kaynak - yektemak_gazebo_plugins paketi -->
   <gazebo>
-    <plugin name="pallet_attacher" filename="libyektemak_pallet_attacher.so">
+    <plugin name="${ns}pallet_attacher" filename="libyektemak_pallet_attacher.so">
       <ros>
-        <namespace>/</namespace>
+        <namespace>/${ns}</namespace>
       </ros>
       <parent_link>lift_platform_link</parent_link>
       <target_prefix>pallet</target_prefix>
@@ -93,11 +96,15 @@
     </plugin>
   </gazebo>
 
+  <!-- Not - sensor ve eklenti adlari ns ile baslar. Iki robotta ayni ad
+       kullanilirsa Gazebo eklentileri karisiyor ve bir robotun LiDAR verisi
+       digerinin topicine akiyor. -->
+
   <!-- ================= 2D LiDAR =================
        Ön tamponda, +-100 derece görüş. Daha geniş açı gövdeye/tekerlere çarpar.
   -->
   <gazebo reference="lidar_link">
-    <sensor name="front_lidar" type="ray">
+    <sensor name="${ns}front_lidar" type="ray">
       <always_on>true</always_on>
       <visualize>false</visualize>
       <update_rate>10.0</update_rate>
@@ -122,20 +129,22 @@
           <stddev>0.005</stddev>
         </noise>
       </ray>
-      <plugin name="front_lidar_plugin" filename="libgazebo_ros_ray_sensor.so">
+      <plugin name="${ns}front_lidar_plugin" filename="libgazebo_ros_ray_sensor.so">
         <ros>
-          <namespace>/</namespace>
-          <remapping>~/out:=scan_raw</remapping>
+          <!-- Sensor eklentilerinde namespace guvenilir degil (coklu robotta
+               ikinci robotun sensoru ilk robotun namespace inde aciliyor).
+               Bu yuzden topic mutlak adla verilir. -->
+          <remapping>~/out:=${'/' + ns if ns else ''}/scan_raw</remapping>
         </ros>
         <output_type>sensor_msgs/LaserScan</output_type>
-        <frame_name>lidar_link</frame_name>
+        <frame_name>${prefix}lidar_link</frame_name>
       </plugin>
     </sensor>
   </gazebo>
 
   <!-- ================= IMU ================= -->
   <gazebo reference="imu_link">
-    <sensor name="imu_sensor" type="imu">
+    <sensor name="${ns}imu_sensor" type="imu">
       <always_on>true</always_on>
       <update_rate>100.0</update_rate>
       <visualize>false</visualize>
@@ -163,13 +172,12 @@
           </y>
         </linear_acceleration>
       </imu>
-      <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+      <plugin name="${ns}imu_plugin" filename="libgazebo_ros_imu_sensor.so">
         <ros>
-          <namespace>/</namespace>
-          <remapping>~/out:=imu/data</remapping>
+          <remapping>~/out:=${'/' + ns if ns else ''}/imu/data</remapping>
         </ros>
         <initial_orientation_as_reference>false</initial_orientation_as_reference>
-        <frame_name>imu_link</frame_name>
+        <frame_name>${prefix}imu_link</frame_name>
       </plugin>
     </sensor>
   </gazebo>

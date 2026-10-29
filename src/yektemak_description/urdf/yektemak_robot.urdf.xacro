@@ -5,6 +5,18 @@
        RVizde sadece modeli gormek icin use_sim argumanini false verin -->
   <xacro:arg name="use_sim" default="true"/>
 
+  <!-- Coklu robot icin namespace (ornek robot1). Bos = tek robot.
+       Gazebo eklentileri bu namespace altinda yayin yapar, frame adlari
+       ns/ oneki alir (robot1/odom, robot1/base_footprint). Link adlari ayni
+       kalir; robot_state_publisher frame_prefix ile oneki ekler. -->
+  <xacro:arg name="ns" default=""/>
+  <xacro:property name="ns" value="$(arg ns)"/>
+  <xacro:property name="prefix" value="${ns + '/' if ns else ''}"/>
+
+  <!-- Gazebo govde rengi (Gazebo/Blue, Gazebo/Orange ...) -->
+  <xacro:arg name="body_color" default="Blue"/>
+  <xacro:property name="body_color" value="$(arg body_color)"/>
+
   <xacro:include filename="yektemak_materials.xacro"/>
   <xacro:include filename="yektemak_base.xacro"/>
   <xacro:include filename="yektemak_wheels.xacro"/>
