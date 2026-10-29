@@ -53,7 +53,11 @@
   <gazebo>
     <plugin name="${ns}planar_move" filename="libgazebo_ros_planar_move.so">
       <ros>
-        <namespace>/${ns}</namespace>
+        <!-- Coklu robotta namespace yerine mutlak topic adlari (sensorlerdeki
+             ile ayni sebep - ikinci robotun eklentisi ilk robotun namespace
+             inde aciliyor, odometri ve hiz komutlari karisiyor) -->
+        <remapping>cmd_vel:=${'/' + ns if ns else ''}/cmd_vel</remapping>
+        <remapping>odom:=${'/' + ns if ns else ''}/odom</remapping>
       </ros>
       <!-- Her fizik adiminda (1 kHz) hiz uygulanir; yukluyken devrilmeyi onler -->
       <update_rate>1000.0</update_rate>
