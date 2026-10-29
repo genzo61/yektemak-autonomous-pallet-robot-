@@ -5,12 +5,17 @@
 
 import os
 
+import sys
+
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
+from launch.actions import OpaqueFunction, DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from gazebo_guard import check_no_running_gazebo  # noqa: E402
 
 
 def generate_launch_description():
@@ -19,6 +24,7 @@ def generate_launch_description():
     gui = LaunchConfiguration("gui")
     world = LaunchConfiguration("world")
     return LaunchDescription([
+        OpaqueFunction(function=check_no_running_gazebo),
         DeclareLaunchArgument("gui", default_value="true"),
         DeclareLaunchArgument("world", default_value=PathJoinSubstitution(
             [sim, "worlds", "factory.world"])),

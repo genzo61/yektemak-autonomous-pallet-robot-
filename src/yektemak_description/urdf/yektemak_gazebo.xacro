@@ -41,6 +41,14 @@
     <material>Gazebo/FlatBlack</material>
   </gazebo>
 
+  <gazebo reference="rear_lidar_link">
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+
+  <gazebo reference="rear_lidar_bracket_link">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
   <gazebo reference="lidar_bracket_link">
     <material>Gazebo/Grey</material>
   </gazebo>
@@ -142,6 +150,43 @@
         </ros>
         <output_type>sensor_msgs/LaserScan</output_type>
         <frame_name>${prefix}lidar_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ================= Arka 2D LiDAR ================= -->
+  <gazebo reference="rear_lidar_link">
+    <sensor name="${ns}rear_lidar" type="ray">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <update_rate>10.0</update_rate>
+      <pose>0 0 0 0 0 0</pose>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>401</samples>
+            <resolution>1</resolution>
+            <min_angle>-1.745329</min_angle>
+            <max_angle>1.745329</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.10</min>
+          <max>20.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.005</stddev>
+        </noise>
+      </ray>
+      <plugin name="${ns}rear_lidar_plugin" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <remapping>~/out:=${'/' + ns if ns else ''}/scan_rear_raw</remapping>
+        </ros>
+        <output_type>sensor_msgs/LaserScan</output_type>
+        <frame_name>${prefix}rear_lidar_link</frame_name>
       </plugin>
     </sensor>
   </gazebo>

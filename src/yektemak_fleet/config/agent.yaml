@@ -9,7 +9,7 @@
     dock_gate_heading: 0.05
     dock_retries: 2
     undock_distance: 1.3
-    lift_up: 0.10
+    lift_up: 0.18
     lift_release: 0.045
     loaded_speed_percent: 60.0
     footprint_empty: [0.52, 0.25, -0.42, -0.25]

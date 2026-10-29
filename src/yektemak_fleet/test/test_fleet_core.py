@@ -121,3 +121,47 @@ def test_shipping_returns_pallet_to_inbound():
     core.tick()
     assert core.stats["shipped"] == 1 and out.pallet is None
     assert core.sim_actions and core.sim_actions[0]["pallet"] == "pallet_7"
+
+
+def _busy(core, name, x, y, loaded=False, task=None):
+    core.on_robot_status({"robot": name, "state": "busy", "x": x, "y": y, "loaded": loaded})
+    core.robots[name].task_id = task
+
+
+def test_traffic_loaded_robot_has_priority():
+    core, _ = make()
+    _busy(core, "robot1", 10.0, 0.0, loaded=False)
+    _busy(core, "robot2", 11.5, 0.0, loaded=True)
+    core.tick()
+    assert "robot1" in core.holds and core.holds["robot1"]["by"] == "robot2"
+    assert ("robot1", True) in core.hold_changes
+
+
+def test_traffic_older_task_wins_and_release_on_distance():
+    core, clock = make()
+    t1, _ = core.create_transport("IN_1", "ST_3")
+    clock.t += 5
+    t2, _ = core.create_transport("IN_2", "ST_4")
+    _busy(core, "robot1", 10.0, 0.0, task=t2.id)
+    _busy(core, "robot2", 11.0, 0.0, task=t1.id)
+    core.dispatch = lambda: []          # atamayi bu testte devre disi birak
+    core.tick()
+    assert core.holds.get("robot1", {}).get("by") == "robot2"
+    _busy(core, "robot2", 15.0, 0.0, task=t1.id)
+    core.tick()
+    assert "robot1" not in core.holds and ("robot1", False) in core.hold_changes
+
+
+def test_traffic_hold_timeout_and_cooldown():
+    core, clock = make()
+    _busy(core, "robot1", 10.0, 0.0)
+    _busy(core, "robot2", 11.0, 0.0, loaded=True)
+    core.tick()
+    assert "robot1" in core.holds
+    clock.t += core.cfg.traffic_max_hold + 1
+    for r in core.robots.values():
+        r.last_seen = clock.t
+    core.tick()
+    assert "robot1" not in core.holds     # zaman asimi, serbest
+    core.tick()
+    assert "robot1" not in core.holds     # bekleme suresi: tekrar bekletilmez

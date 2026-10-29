@@ -8,6 +8,8 @@ Sorumluluklar
 * Bolge kilitleri: ayni anda bir bolgede (ornek depo sirasi) tek robot calisir.
   Robot bolgeye girmeden kilidi ister; kilit doluysa bekleme noktasinda bekler.
   Robot bolgeden uzaklasinca kilidi birakir, siradaki robota verilir (FIFO).
+* Koridor trafigi: gorevdeki iki robot birbirine yaklasinca oncelikli olan
+  (once yuklu olan, sonra gorevi eski olan) devam eder, digeri yol verir.
 * Otomatik uretim modu: mal kabul -> depo -> uretim hatti -> sevkiyat akisini
   kendiliginden gorevlere cevirir; sevk edilen paletler yeni "tir" ile mal kabule doner.
 * Batarya: dusuk bataryali robota gorev verilmez, sarja gonderilir.
@@ -87,6 +89,10 @@ class FleetConfig:
     auto_process_time: float = 45.0   # uretim hattinda palet isleme suresi (s)
     auto_ship_time: float = 30.0      # sevkiyatta tirin gelip almasi (s)
     robot_timeout: float = 6.0
+    traffic_hold_dist: float = 2.4    # bu mesafenin altinda dusuk oncelikli robot durur (m)
+    traffic_release_dist: float = 3.2 # bu mesafeyi gecince devam eder (m)
+    traffic_max_hold: float = 25.0    # kilitlenmeye karsi en uzun bekletme (s)
+    traffic_cooldown: float = 15.0    # zaman asimindan sonra ayni cift tekrar bekletilmez (s)
 
 
 class FleetCore:
@@ -112,6 +118,9 @@ class FleetCore:
         self.events: List[dict] = []
         self.outbox: List[tuple] = []   # (robot, message dict) agent'a gidecekler
         self.sim_actions: List[dict] = []  # Gazebo'ya yapilacaklar (palet tasima vb.)
+        self.holds: Dict[str, dict] = {}   # bekletilen robot -> {"by": robot, "since": t}
+        self.hold_changes: List[tuple] = []  # (robot, True/False) ajanlara gidecek
+        self.cooldown: Dict[tuple, float] = {}
 
     # ------------------------------------------------------------------ olaylar
     def log(self, text, level="info", robot=None):
@@ -293,9 +302,50 @@ class FleetCore:
                     if owner == r.name:
                         self.zone_request(r.name, z, "release")
         self._battery_policy()
+        self._traffic()
         if self.auto:
             self._auto_production()
         return self.dispatch()
+
+    # ------------------------------------------------------------------ trafik
+    def _priority(self, r: Robot):
+        t = self.tasks.get(r.task_id or "")
+        return (1 if r.loaded else 0, -(t.created if t else self.clock()))
+
+    def _set_hold(self, robot, by=None):
+        if by:
+            self.holds[robot] = {"by": by, "since": self.clock()}
+            self.hold_changes.append((robot, True))
+            self.log(f"Trafik: {robot} durdu, {by} gecis yapiyor", robot=robot)
+        elif robot in self.holds:
+            del self.holds[robot]
+            self.hold_changes.append((robot, False))
+            self.log(f"Trafik: {robot} yoluna devam ediyor", robot=robot)
+
+    def _traffic(self):
+        now = self.clock()
+        movers = [r for r in self.robots.values() if r.state == "busy" and not r.estop]
+        # Birakma kosullari
+        for name, h in list(self.holds.items()):
+            r, by = self.robots[name], self.robots.get(h["by"])
+            d = math.hypot(r.x - by.x, r.y - by.y) if by else 1e9
+            timeout = now - h["since"] > self.cfg.traffic_max_hold
+            if (d > self.cfg.traffic_release_dist or not by or by.state != "busy" or by.estop
+                    or r.state != "busy" or timeout):
+                if timeout:
+                    self.cooldown[tuple(sorted((name, h["by"])))] = now + self.cfg.traffic_cooldown
+                    self.log(f"Trafik: {name} cok bekledi, kendi yolunu bulmasi icin serbest", "warn", robot=name)
+                self._set_hold(name)
+        # Yeni bekletmeler
+        for i, a in enumerate(movers):
+            for b in movers[i + 1:]:
+                if a.name in self.holds or b.name in self.holds:
+                    continue
+                if self.cooldown.get(tuple(sorted((a.name, b.name))), 0) > now:
+                    continue
+                if math.hypot(a.x - b.x, a.y - b.y) < self.cfg.traffic_hold_dist:
+                    win, lose = (a, b) if self._priority(a) >= self._priority(b) else (b, a)
+                    self._set_hold(lose.name, win.name)
 
     def _battery_policy(self):
         for r in self.robots.values():
@@ -359,6 +409,7 @@ class FleetCore:
                               age=round(now - s.since, 0) if s.pallet else None)
                          for s in self.stations.values()],
             "locks": self.locks,
+            "holds": self.holds,
             "lock_queue": self.lock_queue,
             "events": self.events[-40:],
         }

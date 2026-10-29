@@ -52,7 +52,7 @@ class MissionManager(BasicNavigator):
         p("return_home", True)
         p("predock_distance", 1.8)
         p("lidar_x", 0.47)
-        p("lift_up", 0.10)
+        p("lift_up", 0.18)
         p("lift_release", 0.045)
         p("loaded_speed_percent", 60.0)
         p("footprint_empty", [0.52, 0.25, -0.42, -0.25])
@@ -128,6 +128,10 @@ class MissionManager(BasicNavigator):
     def on_nav_tick(self):
         """Nav2 hedefi izlenirken periyodik cagrilir."""
 
+    def wait_resume(self):
+        """nav_paused() True olduktan sonra devam izni gelene kadar bekler."""
+        self.guard()
+
     # ------------------------------------------------------------------ yardimcilar
     def say(self, text):
         self.info(text)
@@ -166,7 +170,7 @@ class MissionManager(BasicNavigator):
                 if self.nav_paused():
                     self.cancelTask()
                     self.stop()
-                    self.guard()
+                    self.wait_resume()
                     paused = True
                     break
             if paused:

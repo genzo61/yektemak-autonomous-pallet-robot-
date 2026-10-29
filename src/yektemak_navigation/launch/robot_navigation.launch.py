@@ -40,8 +40,8 @@ def prefix_frames(obj, ns):
         for k, v in obj.items():
             if isinstance(v, str) and (k in FRAME_KEYS or k.endswith("_frame")) and v in ROBOT_FRAMES:
                 out[k] = f"{ns}/{v}"
-            elif k == "topic" and v == "/scan":
-                out[k] = f"/{ns}/scan"
+            elif k == "topic" and v in ("/scan", "/scan_rear"):
+                out[k] = f"/{ns}{v}"
             else:
                 out[k] = prefix_frames(v, ns)
         return out
@@ -95,6 +95,9 @@ def setup(context):
         Node(package="laser_filters", executable="scan_to_scan_filter_chain",
              name="scan_to_scan_filter_chain", namespace=ns, output="screen",
              parameters=[filt_file], remappings=[("scan", "scan_raw"), ("scan_filtered", "scan")]),
+        Node(package="laser_filters", executable="scan_to_scan_filter_chain",
+             name="rear_scan_filter", namespace=ns, output="screen",
+             parameters=[filt_file], remappings=[("scan", "scan_rear_raw"), ("scan_filtered", "scan_rear")]),
         Node(package="nav2_map_server", executable="map_server", name="map_server",
              namespace=ns, output="screen", parameters=[nav_file, common]),
         Node(package="nav2_amcl", executable="amcl", name="amcl",

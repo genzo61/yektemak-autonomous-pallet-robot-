@@ -29,7 +29,7 @@ mission_manager:
     undock_distance: 1.15
 
     # Lift (m)
-    lift_up: 0.10
+    lift_up: 0.18
     lift_release: 0.045
 
     # Yuklu mod

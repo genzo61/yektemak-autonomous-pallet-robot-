@@ -26,7 +26,7 @@ import math
 import rclpy
 import yaml
 from gazebo_msgs.msg import EntityState
-from gazebo_msgs.srv import SetEntityState
+from gazebo_msgs.srv import GetEntityState, SetEntityState
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import Bool, String
@@ -66,11 +66,16 @@ class FleetManager(Node):
         self.task_pubs = {r: self.create_publisher(String, f"/{r}/agent/task", 10) for r in self.core.robots}
         self.estop_pubs = {r: self.create_publisher(Bool, f"/{r}/agent/estop", latched)
                            for r in self.core.robots}
+        self.hold_pubs = {r: self.create_publisher(Bool, f"/{r}/agent/hold", latched)
+                          for r in self.core.robots}
         self.create_subscription(String, "/fleet/command", self.on_command, 20)
         self.create_subscription(String, "/fleet/robot_status", self.on_status, 50)
         self.create_subscription(String, "/fleet/task_result", self.on_result, 20)
         self.create_subscription(String, "/fleet/zone_request", self.on_zone, 50)
         self.gz = self.create_client(SetEntityState, "/gazebo/set_entity_state")
+        self.gz_get = self.create_client(GetEntityState, "/gazebo/get_entity_state")
+        self.declare_parameter("expected_world_model", "factory_building")
+        self.world_checked = False
 
         self.create_timer(0.5, self.on_timer)
         self._last_locks = None
@@ -130,11 +135,35 @@ class FleetManager(Node):
             c.log(f"Otomatik uretim modu {'ACIK' if c.auto else 'KAPALI'}")
 
     # ------------------------------------------------------------------ periyodik
+    def check_world(self):
+        """Gazebo'da fabrika dunyasi gercekten yuklu mu? (Eski bir Gazebo acik kalinca
+        robotlar baska dunyaya eklenir; bu durumu panelde acikca goster.)"""
+        if self.world_checked or not self.gz_get.service_is_ready():
+            return
+        self.world_checked = True
+        name = self.get_parameter("expected_world_model").value
+        fut = self.gz_get.call_async(GetEntityState.Request(name=name))
+
+        def done(f):
+            res = f.result()
+            if res is None or not res.success:
+                self.core.log(f"UYARI: Gazebo'da '{name}' modeli yok, yanlis dunya acik olabilir. "
+                              "Tum ROS/Gazebo sureclerini kapatip (killall -9 gzserver gzclient) "
+                              "demoyu yeniden baslatin.", "error")
+                self.get_logger().error("Gazebo'da fabrika dunyasi bulunamadi!")
+            else:
+                self.core.log("Gazebo fabrika dunyasi dogrulandi")
+        fut.add_done_callback(done)
+
     def on_timer(self):
+        self.check_world()
         self.core.tick()
         while self.core.outbox:
             robot, task = self.core.outbox.pop(0)
             self.task_pubs[robot].publish(String(data=json.dumps(task)))
+        while self.core.hold_changes:
+            robot, on = self.core.hold_changes.pop(0)
+            self.hold_pubs[robot].publish(Bool(data=on))
         while self.core.sim_actions:
             self.do_sim_action(self.core.sim_actions.pop(0))
         self.publish_locks()

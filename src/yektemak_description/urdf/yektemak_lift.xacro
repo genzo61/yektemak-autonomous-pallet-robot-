@@ -9,7 +9,7 @@
 
   <xacro:property name="lift_platform_mass" value="6.0"/>
   <xacro:property name="lift_platform_clearance" value="0.01"/>
-  <xacro:property name="lift_max_height" value="0.10"/>
+  <xacro:property name="lift_max_height" value="0.18"/>
 
   <!-- Paleti kaldıracak üst platform -->
   <link name="lift_platform_link">

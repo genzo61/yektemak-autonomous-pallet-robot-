@@ -68,6 +68,59 @@
       rpy="0 0 0"/>
   </joint>
 
+  <!-- Arka 2D LiDAR - on LiDARin simetrigi, geriye bakar. Geri giderken ve
+       robotlar karsilastiginda arkayi da gormek icin. Costmapte ikinci
+       gozlem kaynagi olarak kullanilir. -->
+  <link name="rear_lidar_bracket_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.07 0.08 0.02"/>
+      </geometry>
+      <material name="yektemak_gray"/>
+    </visual>
+  </link>
+
+  <joint name="rear_lidar_bracket_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="rear_lidar_bracket_link"/>
+    <origin
+      xyz="${-(base_length / 2.0 + 0.035)} 0
+           ${lidar_height_from_ground - lidar_length / 2.0 - 0.01
+             - (base_ground_clearance + base_height / 2.0)}"
+      rpy="0 0 0"/>
+  </joint>
+
+  <link name="rear_lidar_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="${lidar_radius}" length="${lidar_length}"/>
+      </geometry>
+      <material name="yektemak_dark"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="${lidar_radius}" length="${lidar_length}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.3"/>
+      <inertia ixx="0.0002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002"/>
+    </inertial>
+  </link>
+
+  <joint name="rear_lidar_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="rear_lidar_link"/>
+    <origin
+      xyz="${-lidar_x} 0
+           ${lidar_height_from_ground - (base_ground_clearance + base_height / 2.0)}"
+      rpy="0 0 ${pi}"/>
+  </joint>
+
   <!-- IMU - gövde merkezinde -->
   <link name="imu_link">
     <visual>

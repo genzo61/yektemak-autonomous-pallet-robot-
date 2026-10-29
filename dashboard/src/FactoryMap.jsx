@@ -66,6 +66,7 @@ export default function FactoryMap({ state, plans, selection, onStation }) {
 
       {robots.map((r, i) => (
         <g key={r.name} className={`robot ${r.state}`} transform={`translate(${r.x} ${Y(r.y)}) rotate(${deg(r.yaw)})`}>
+          {state?.holds?.[r.name] && <circle r={0.95} className="robot-hold" />}
           {r.loaded && <rect x={-0.62} y={-0.42} width={1.24} height={0.84} className="robot-load" />}
           <rect x={-0.42} y={-0.25} width={0.94} height={0.5} rx={0.08} fill={robotColor(r.name, i)} className="robot-body" />
           <path d="M 0.62 0 L 0.3 -0.2 L 0.3 0.2 Z" className="robot-nose" />

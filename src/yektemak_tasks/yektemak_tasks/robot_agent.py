@@ -43,6 +43,7 @@ class RobotAgent(MissionManager):
 
         self.battery = 100.0
         self.estop = False
+        self.hold = False          # filo trafik yonetimi: yol ver
         self.state = "idle"
         self.step = "Hazir"
         self.task = None
@@ -61,6 +62,7 @@ class RobotAgent(MissionManager):
                              durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(String, "agent/task", self._on_task, 10)
         self.create_subscription(Bool, "agent/estop", self._on_estop, latched)
+        self.create_subscription(Bool, "agent/hold", self._on_hold, latched)
         self.create_subscription(String, "/fleet/locks", self._on_locks, latched)
         self.status_pub = self.create_publisher(String, "/fleet/robot_status", 10)
         self.result_pub = self.create_publisher(String, "/fleet/task_result", 10)
@@ -79,6 +81,9 @@ class RobotAgent(MissionManager):
             self.estop = msg.data
             self.stop()
             self.say("ACIL DURDURMA" if self.estop else "Acil durdurma kaldirildi")
+
+    def _on_hold(self, msg):
+        self.hold = msg.data
 
     def _on_locks(self, msg):
         try:
@@ -146,7 +151,17 @@ class RobotAgent(MissionManager):
             rclpy.spin_once(self, timeout_sec=0.1)
 
     def nav_paused(self):
-        return self.estop
+        return self.estop or self.hold
+
+    def wait_resume(self):
+        """Acil durdurma ya da trafik beklemesi bitene kadar dur."""
+        prev = self.step
+        while (self.estop or self.hold) and rclpy.ok():
+            if self.hold and not self.estop:
+                self.step = "Trafik: diger robota yol veriliyor"
+            self.stop()
+            rclpy.spin_once(self, timeout_sec=0.1)
+        self.step = prev
 
     def on_nav_tick(self):
         # Park alanina donerken yeni gorev geldiyse donusu yarida kes

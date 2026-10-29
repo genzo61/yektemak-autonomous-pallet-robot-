@@ -14,13 +14,15 @@ function Battery({ value }) {
   );
 }
 
-function RobotCard({ r, i, task, send }) {
+function RobotCard({ r, i, task, send, hold }) {
   const color = robotColor(r.name, i);
   return (
     <section className={`robot-card state-${r.state}`} style={{ "--rc": color }}>
       <header>
         <h3>{ROBOT_LABEL(r.name)}</h3>
-        <span className="badge">{STATE_TEXT[r.state] || r.state}</span>
+        <span className={`badge${hold ? " hold" : ""}`}>
+          {hold ? `Yol veriyor (${ROBOT_LABEL(hold.by)})` : STATE_TEXT[r.state] || r.state}
+        </span>
       </header>
       <p className="step">{r.state === "offline" ? "Robottan haber alınamıyor" : r.step || "—"}</p>
       <Battery value={r.battery} />
@@ -170,7 +172,7 @@ export default function App() {
 
         <aside className="rail">
           <div className="robots">
-            {(state?.robots || []).map((r, i) => <RobotCard key={r.name} r={r} i={i} task={byId[r.task_id]} send={send} />)}
+            {(state?.robots || []).map((r, i) => <RobotCard key={r.name} r={r} i={i} task={byId[r.task_id]} send={send} hold={state.holds?.[r.name]} />)}
             {!state && <p className="empty">Filo yöneticisine bağlanılamadı. Simülasyon ve <code>fleet.launch.py</code> çalışıyor mu?</p>}
           </div>
           <TaskComposer state={state} selection={selection} setSelection={setSelection} send={send} />

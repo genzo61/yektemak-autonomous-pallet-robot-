@@ -126,6 +126,8 @@ button:disabled { cursor: not-allowed; opacity: 0.45; }
 .state-busy .badge { background: #dfe9ff; color: #1d4bc4; }
 .state-charging .badge { background: #fff4c2; color: #6b5300; }
 .state-estop .badge, .state-error .badge { background: #ffd9db; color: #9b1219; }
+.badge.hold { background: #fff0b3; color: #6b5300; }
+.robot-hold { fill: none; stroke: var(--safety); stroke-width: 0.12; stroke-dasharray: 0.3 0.18; }
 .state-offline .badge { background: #e6e6e6; color: #777; }
 .step { margin: 0.35rem 0 0.55rem; min-height: 2.6em; color: var(--ink-soft); }
 .battery { position: relative; height: 18px; border-radius: 4px; background: #e1e4e7; overflow: hidden; }
