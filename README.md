@@ -91,6 +91,8 @@ ros2 run nav2_map_server map_saver_cli -f src/yektemak_navigation/maps/factory
 
 **Koridor trafiği.** İki görevdeki robot birbirine 2.4 m'den fazla yaklaşırsa öncelikli olan devam eder, diğeri durup yol verir. Önce yüklü robot geçer, ikisi de aynıysa görevi daha eski olan. Aralarındaki mesafe 3.2 m'yi geçince bekleyen robot devam eder. Panelde bekleyen robotun kartında "Yol veriyor" rozeti ve haritada sarı kesikli halka görünür. Kilitlenmeye karşı bir robot en fazla 25 sn bekletilir. Yol verme sadece Nav2 sürüşünü durdurur, palet altındaki docking ve lift hareketleri asla yarıda kesilmez.
 
+**Palet altında güvenlik.** Robot paletin altındayken bir hata olursa (lift kalkamazsa, palet kilitlenemezse) önce lift'i indirir, sonra **düz geri** çıkar. Palet altındayken asla yerinde dönmez, parka dönüş de ancak paletten çıktıktan sonra başlar. Acil durdurmada geçen süre zaman aşımlarına sayılmaz, durdurma kaldırılınca robot kaldığı yerden devam eder.
+
 **Önce eski Gazebo'yu kapat.** Daha önceki bir denemeden kalma bir `gzserver` açıksa yeni launch kendi Gazebo'sunu açamaz ve robotları o **eski dünyaya** ekler. Robotlar fabrika haritasıyla başka bir dünyada konum bulmaya çalışır, panelde saçma yerlerde görünür ve tıkanırlar. Launch artık bu durumu algılayıp duruyor ve şu komutu öneriyor:
 
 ```bash
@@ -188,7 +190,7 @@ Ek olarak `tools/generate_world.py` depo dünyasını, palet ve raf modellerini 
 |---|---|
 | Gövde | 0.80 × 0.38 × 0.10 m, 80 kg, yerden 4 cm |
 | Teker | 4 adet, Ø 0.20 m (dış genişlik 0.48 m) |
-| Lift | 0.68 × 0.30 m platform, 0–18 cm strok, PID pozisyon kontrol (palet yerden 14 cm kalkar, raylar LiDAR düzleminin üstüne çıkar) |
+| Lift | 0.68 × 0.30 m platform, 0–18 cm strok (görevde 17 cm kullanılır), PID pozisyon kontrol (palet yerden ~13 cm kalkar, raylar LiDAR düzleminin üstüne çıkar) |
 | LiDAR | Ön ve arka tampon, yerden 11 cm, her biri ±100°, 20 m |
 | IMU | Gövde merkezi, 100 Hz |
 | Palet | 1.20 × 0.80 m, iki raylı (iç aralık 0.60 m), yükle 55 kg |

@@ -57,6 +57,7 @@ class RobotAgent(MissionManager):
         self.last_t = time.time()
         self.returning = False
         self.idle_since = None
+        self.under_pallet = False
 
         latched = QoSProfile(depth=1, reliability=ReliabilityPolicy.RELIABLE,
                              durability=DurabilityPolicy.TRANSIENT_LOCAL)
@@ -144,11 +145,14 @@ class RobotAgent(MissionManager):
     # ------------------------------------------------------------------ kancalar
     def guard(self):
         if not self.estop:
-            return
+            return 0.0
+        t0 = self.sim_now()
         self.stop()
         while self.estop and rclpy.ok():
             self.stop()
             rclpy.spin_once(self, timeout_sec=0.1)
+        self.say("Acil durdurma kaldirildi, kalinan yerden devam ediliyor")
+        return self.sim_now() - t0
 
     def nav_paused(self):
         return self.estop or self.hold
@@ -225,6 +229,7 @@ class RobotAgent(MissionManager):
             self.move_lift(self.cfg["lift_up"])
             pallet = self.attach(True)
             picked, self.loaded, self.pallet = True, True, pallet
+            self.under_pallet = False   # palet artik robotla birlikte; tasimada donebilir
             self.set_loaded(True)
             self.clearAllCostmaps()
             self.finish_zone(t.get("pick_zone"))
@@ -239,6 +244,7 @@ class RobotAgent(MissionManager):
             self.loaded, self.pallet = False, None
             self.say(f"{t['drop']}: paletin altindan cikiliyor")
             self.drive_straight(self.cfg["undock_distance"], 0.15)
+            self.under_pallet = False
             self.set_loaded(False)
             self.clearAllCostmaps()
             self.finish_zone(t.get("drop_zone"))
@@ -246,11 +252,14 @@ class RobotAgent(MissionManager):
         except MissionError as e:
             self.stop()
             if not picked:
-                # Palet kilitlenmeden hata: lift'i indir ki palet yarim kalkik kalmasin
-                try:
-                    self.move_lift(0.0)
-                except MissionError:
-                    pass
+                # Palet kilitlenmeden hata: lift'i indir ve palet altindaysa duz geri cik
+                if self.under_pallet:
+                    self.leave_pallet_backwards()
+                else:
+                    try:
+                        self.move_lift(0.0)
+                    except MissionError:
+                        pass
             for z in (t.get("pick_zone"), t.get("drop_zone")):
                 self.finish_zone(z)
             return {"ok": False, "picked": picked, "pallet": pallet, "message": str(e)}
@@ -279,6 +288,8 @@ class RobotAgent(MissionManager):
                     self.step = f"Sarj oluyor (%{self.battery:.0f})"
                 # Is bitti, yeni gorev yok: istasyon sirasini bosaltmak ve sarj olmak
                 # icin park alanina don (bolge kilidi robot uzaklasinca birakilir).
+                if self.under_pallet:
+                    self.leave_pallet_backwards()
                 if (not at_home and self.idle_since is not None
                         and self.sim_now() - self.idle_since > 3.0):
                     self.returning, self.idle_since = True, None

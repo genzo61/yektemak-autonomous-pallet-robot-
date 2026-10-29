@@ -52,7 +52,7 @@ class MissionManager(BasicNavigator):
         p("return_home", True)
         p("predock_distance", 1.8)
         p("lidar_x", 0.47)
-        p("lift_up", 0.18)
+        p("lift_up", 0.17)
         p("lift_release", 0.045)
         p("loaded_speed_percent", 60.0)
         p("footprint_empty", [0.52, 0.25, -0.42, -0.25])
@@ -119,7 +119,9 @@ class MissionManager(BasicNavigator):
     # ------------------------------------------------------------------ kancalar
     # Filo ajani (robot_agent.py) bunlari ezer; tek robot modunda bos.
     def guard(self):
-        """Uzun dongulerde cagrilir: acil durdurma vb. icin bekletme noktasi."""
+        """Uzun dongulerde cagrilir: acil durdurma vb. icin bekletme noktasi.
+        Beklenen sureyi (sim saniye) dondurur; zaman asimlari bu kadar uzatilir."""
+        return 0.0
 
     def nav_paused(self):
         """True donerse Nav2 hedefi iptal edilir ve tekrar izin gelene kadar beklenir."""
@@ -205,10 +207,10 @@ class MissionManager(BasicNavigator):
         msg = Float64MultiArray(data=[float(height)])
         end = self.sim_now() + timeout
         while self.sim_now() < end:
-            self.guard()
+            end += self.guard() or 0.0      # acil durdurmada gecen sure sayilmaz
             self.lift_pub.publish(msg)
             self.spin_for(0.1)
-            if abs(self.lift_pos - height) < 0.006:
+            if abs(self.lift_pos - height) < 0.01:
                 self.spin_for(0.5)
                 return
         raise MissionError(f"Lift {height:.3f} m yuksekligine ulasamadi (su an {self.lift_pos:.3f})")
@@ -255,6 +257,19 @@ class MissionManager(BasicNavigator):
         # LiDAR cercevesi -> base_footprint -> odom
         ox, oy = transform_point(self.odom, d.x + self.cfg["lidar_x"], d.y)
         return ox, oy, normalize_angle(self.odom[2] + d.yaw)
+
+    def leave_pallet_backwards(self):
+        """Palet altinda bir hata olursa: lift'i indir ve DUZ geri cik.
+        Palet altindayken yerinde donmek robotu raylara carpip sikistirir."""
+        if not getattr(self, "under_pallet", False):
+            return
+        try:
+            self.move_lift(0.0)
+        except MissionError:
+            pass
+        self.say("Hata sonrasi paletin altindan duz geri cikiliyor")
+        self.drive_straight(-(self.cfg["lidar_x"] + 0.55 + 0.55), 0.10)
+        self.under_pallet = False
 
     def drive_straight(self, distance, speed=0.12):
         """Odometriye gore duz git (negatif = geri), baslangic yonunu koruyarak."""
@@ -326,6 +341,7 @@ class MissionManager(BasicNavigator):
 
             if px >= -0.005:
                 self.stop()
+                self.under_pallet = True
                 self.spin_for(0.5)
                 px, py = to_local((tx, ty, tyaw), self.odom[0], self.odom[1])
                 self.say(f"Palet altinda: merkez hatasi {px * 100:+.1f} cm ileri, {py * 100:+.1f} cm yan")
