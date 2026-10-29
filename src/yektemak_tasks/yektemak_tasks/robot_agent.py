@@ -223,6 +223,12 @@ class RobotAgent(MissionManager):
             return {"ok": True, "pallet": pallet, "message": "tamam"}
         except MissionError as e:
             self.stop()
+            if not picked:
+                # Palet kilitlenmeden hata: lift'i indir ki palet yarim kalkik kalmasin
+                try:
+                    self.move_lift(0.0)
+                except MissionError:
+                    pass
             for z in (t.get("pick_zone"), t.get("drop_zone")):
                 self.finish_zone(z)
             return {"ok": False, "picked": picked, "pallet": pallet, "message": str(e)}

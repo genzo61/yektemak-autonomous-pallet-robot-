@@ -133,6 +133,11 @@ class MissionManager(BasicNavigator):
         self.info(text)
         self.status_pub.publish(String(data=text))
 
+    def sim_now(self):
+        """ROS saati (use_sim_time ile simulasyon saati). Zaman asimlari bununla olculur;
+        simulasyon yavas calistiginda duvar saati yaniltir."""
+        return self.get_clock().now().nanoseconds * 1e-9
+
     def spin_for(self, seconds):
         end = time.time() + seconds
         while time.time() < end:
@@ -194,8 +199,8 @@ class MissionManager(BasicNavigator):
 
     def move_lift(self, height, timeout=8.0):
         msg = Float64MultiArray(data=[float(height)])
-        end = time.time() + timeout
-        while time.time() < end:
+        end = self.sim_now() + timeout
+        while self.sim_now() < end:
             self.guard()
             self.lift_pub.publish(msg)
             self.spin_for(0.1)
@@ -231,8 +236,8 @@ class MissionManager(BasicNavigator):
     def measure_pallet(self, expected_yaw_odom, samples=8):
         """Paleti birkac scan ile olcer; odom cercevesinde (x, y, yaw) dondurur."""
         dets, last = [], None
-        end = time.time() + 4.0
-        while len(dets) < samples and time.time() < end:
+        end = self.sim_now() + 4.0
+        while len(dets) < samples and self.sim_now() < end:
             rclpy.spin_once(self, timeout_sec=0.05)
             if self.scan is None or self.scan is last or self.odom is None:
                 continue
