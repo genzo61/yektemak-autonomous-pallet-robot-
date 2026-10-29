@@ -116,6 +116,18 @@ class MissionManager(BasicNavigator):
             self.queue.append(task)
             self.say(f"Yeni gorev kuyruga eklendi: {task}")
 
+    # ------------------------------------------------------------------ kancalar
+    # Filo ajani (robot_agent.py) bunlari ezer; tek robot modunda bos.
+    def guard(self):
+        """Uzun dongulerde cagrilir: acil durdurma vb. icin bekletme noktasi."""
+
+    def nav_paused(self):
+        """True donerse Nav2 hedefi iptal edilir ve tekrar izin gelene kadar beklenir."""
+        return False
+
+    def on_nav_tick(self):
+        """Nav2 hedefi izlenirken periyodik cagrilir."""
+
     # ------------------------------------------------------------------ yardimcilar
     def say(self, text):
         self.info(text)
@@ -139,13 +151,25 @@ class MissionManager(BasicNavigator):
 
     def navigate(self, x, y, yaw, label):
         self.say(f"Nav2 -> {label} ({x:.2f}, {y:.2f})")
-        for attempt in range(3):
+        attempt = 0
+        while attempt < 3:
             self.goToPose(self.make_pose(x, y, yaw))
+            paused = False
             while not self.isTaskComplete():
                 rclpy.spin_once(self, timeout_sec=0.05)
+                self.on_nav_tick()
+                if self.nav_paused():
+                    self.cancelTask()
+                    self.stop()
+                    self.guard()
+                    paused = True
+                    break
+            if paused:
+                continue
             if self.getResult() == TaskResult.SUCCEEDED:
                 return
-            self.warn(f"Nav2 hedefe ulasamadi ({label}), tekrar {attempt + 1}/3")
+            attempt += 1
+            self.warn(f"Nav2 hedefe ulasamadi ({label}), tekrar {attempt}/3")
             self.clearAllCostmaps()
             self.spin_for(1.0)
         raise MissionError(f"{label} noktasina gidilemedi")
@@ -172,6 +196,7 @@ class MissionManager(BasicNavigator):
         msg = Float64MultiArray(data=[float(height)])
         end = time.time() + timeout
         while time.time() < end:
+            self.guard()
             self.lift_pub.publish(msg)
             self.spin_for(0.1)
             if abs(self.lift_pos - height) < 0.006:
@@ -189,6 +214,7 @@ class MissionManager(BasicNavigator):
         if res is None or not res.success:
             raise MissionError("Palet kilitlenemedi: " + (res.message if res else "cevap yok"))
         self.info(res.message)
+        return res.message.split(":", 1)[-1].strip() if ":" in res.message else None
 
     def map_yaw_to_odom(self, yaw_map):
         """Haritadaki bir yonu odom cercevesine cevirir (AMCL ile odom arasindaki fark)."""
@@ -227,6 +253,7 @@ class MissionManager(BasicNavigator):
         sign = 1.0 if distance >= 0 else -1.0
         while True:
             rclpy.spin_once(self, timeout_sec=0.02)
+            self.guard()
             gone, _ = to_local(start, self.odom[0], self.odom[1])
             remaining = abs(distance) - abs(gone)
             if remaining <= 0.005:
@@ -262,6 +289,7 @@ class MissionManager(BasicNavigator):
         last_refine = 0.0
         while True:
             rclpy.spin_once(self, timeout_sec=0.02)
+            self.guard()
             rx, ry, ryaw = self.odom
             # Robotun palet cercevesindeki konumu (palet merkezi 0, giris -x tarafindan)
             px, py = to_local((tx, ty, tyaw), rx, ry)

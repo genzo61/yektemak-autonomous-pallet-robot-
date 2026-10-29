@@ -1,0 +1,78 @@
+# tools/generate_factory.py ile uretildi. Dunya ile ayni olmali.
+stations:
+  CH_1:
+    x: 0.5
+    y: 1.5
+    yaw: 0.0
+    type: charge
+  CH_2:
+    x: 0.5
+    y: -1.5
+    yaw: 0.0
+    type: charge
+  IN_1:
+    x: 4.0
+    y: -8.0
+    yaw: -1.5708
+    type: inbound
+  IN_2:
+    x: 7.5
+    y: -8.0
+    yaw: -1.5708
+    type: inbound
+  IN_3:
+    x: 11.0
+    y: -8.0
+    yaw: -1.5708
+    type: inbound
+  ST_1:
+    x: 17.0
+    y: -7.0
+    yaw: -1.5708
+    type: storage
+  ST_2:
+    x: 20.0
+    y: -7.0
+    yaw: -1.5708
+    type: storage
+  ST_3:
+    x: 23.0
+    y: -7.0
+    yaw: -1.5708
+    type: storage
+  ST_4:
+    x: 26.0
+    y: -7.0
+    yaw: -1.5708
+    type: storage
+  PL_1:
+    x: 17.5
+    y: 5.5
+    yaw: 1.5708
+    type: production
+  PL_2:
+    x: 23.5
+    y: 5.5
+    yaw: 1.5708
+    type: production
+  OUT_1:
+    x: 30.5
+    y: -3.0
+    yaw: 0.0
+    type: outbound
+  OUT_2:
+    x: 30.5
+    y: 0.0
+    yaw: 0.0
+    type: outbound
+  OUT_3:
+    x: 30.5
+    y: 3.0
+    yaw: 0.0
+    type: outbound
+initial_pallets:
+  IN_1: pallet_1
+  IN_2: pallet_2
+  IN_3: pallet_3
+  ST_1: pallet_4
+  ST_2: pallet_5

@@ -25,6 +25,7 @@ setup(
         "console_scripts": [
             "map_explorer = yektemak_tasks.map_explorer:main",
             "mission_manager = yektemak_tasks.mission_manager:main",
+            "robot_agent = yektemak_tasks.robot_agent:main",
         ],
     },
 )
