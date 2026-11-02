@@ -14,6 +14,95 @@ Tek komutla robot şu döngüyü insan müdahalesi olmadan tamamlar: park alanı
 
 Başsız (headless) Gazebo testinde iki palet görevinin ölçülen sonuçları şöyle: paletin altına girme hatası 0.5 cm'nin altında, bırakma hatası 1–7 cm, parka dönüş hatası yaklaşık 6 cm.
 
+## Filo yönetimi (2 robot + operatör paneli)
+
+![Operatör paneli](docs/images/panel_otomatik.jpg)
+
+36 × 24 m'lik bir fabrikada iki robot, merkezi bir filo yöneticisi ve tarayıcıda çalışan bir React operatör paneli var. Malzeme akışı şöyle: **mal kabul** (IN, tırdan gelen paletler) → **depo** (ST) → **üretim hattı** (PL) → **sevkiyat** (OUT). Ayrıca her robotun bir şarj istasyonu (CH) var.
+
+**Ek kurulum:**
+
+```bash
+sudo apt install -y ros-humble-rosbridge-suite
+```
+
+**Tek komutla tam demo:**
+
+```bash
+ros2 launch yektemak_bringup fleet_demo.launch.py
+# tarayıcıda: http://localhost:8080
+```
+
+| Argüman | Etkisi |
+|---|---|
+| `auto:=true` | Otomatik üretim açılışta açık olur |
+| `gui:=false` | Gazebo penceresi kapanır, sistem hafifler |
+| `rviz:=true` | İki robotu aynı haritada gösteren RViz açılır |
+
+Robotlar ve Nav2 yaklaşık bir dakikada ayağa kalkar. Panelde iki robot kartı "Hazır" olunca görev verebilirsin.
+
+**Panelden neler yapılır?**
+- Haritada önce paletli bir istasyona, sonra boş bir istasyona tıkla ve **Görevi oluştur** de. Robot seçmezsen filo, palete en yakın boştaki robotu seçer.
+- **Otomatik üretim** açıkken filo akışı kendisi yürütür: mal kabulden depoya, depodan üretime, üretimden sevkiyata. Üretim hattındaki palet 45 sn "işlenir". Sevkiyattaki palet 30 sn sonra tırla gider, mal kabule yeni palet olarak geri gelir. Böylece demo sonsuz döngüde çalışır.
+- Robot kartındaki **Durdur** o robotu, üst şeritteki **ACİL DURDUR** bütün filoyu durdurur. Kaldırınca robotlar kaldıkları yerden devam eder.
+- Bataryası %30'un altına düşen robota görev verilmez, şarja gider. %80'e gelince tekrar görev alır. Batarya simüle ediliyor: yol aldıkça, yüklüyken daha hızlı düşer.
+
+**Nasıl çalışıyor?**
+
+| Parça | Görevi |
+|---|---|
+| `yektemak_fleet/fleet_core.py` | Görev kuyruğu, robot seçimi, bölge kilitleri, palet takibi, batarya politikası, otomatik üretim (ROS'tan bağımsız, birim testli) |
+| `yektemak_fleet/fleet_manager.py` | Çekirdeği ROS'a bağlar, `/fleet/state` ile durumu saniyede 2 kez yayınlar |
+| `yektemak_tasks/robot_agent.py` | Her robotta bir tane: filodan görev alır, Nav2 + LiDAR docking ile yapar, durumunu ve bataryasını bildirir |
+| `dashboard/` | React + roslib operatör paneli, rosbridge (port 9090) ile konuşur |
+
+**Bölge kilitleri (trafik yönetimi).** Mal kabul, depo, üretim ve sevkiyat sıraları birer bölgedir. Bir robot bir bölgede palet alırken ya da bırakırken diğer robot o bölgeye girmez: ana koridordaki bekleme noktasında sırasını bekler (panelde bölge kesikli çizgiyle "Robot X çalışıyor" diye görünür). Robot bölgeden 4 m uzaklaşınca kilit sıradaki robota geçer. Bu, dar istasyon sıralarında iki robotun karşı karşıya gelip kilitlenmesini önler. Ana koridorda ise robotlar birbirini LiDAR ile görüp Nav2 ile kaçar.
+
+Bütün mesajlar `std_msgs/String` içinde JSON taşır. Böylece panel ek mesaj paketi derlemeden doğrudan konuşabilir. Komut satırından görev vermek için:
+
+```bash
+ros2 topic pub --once /fleet/command std_msgs/msg/String "{data: '{\"cmd\":\"create_task\",\"pick\":\"IN_1\",\"drop\":\"ST_3\"}'}"
+ros2 topic echo /fleet/state
+```
+
+**Paneli değiştirmek istersen:**
+
+```bash
+cd dashboard
+npm install
+npm run dev          # geliştirme: http://localhost:5173 (simülasyon açıkken)
+npm run build        # derleme src/yektemak_fleet/web klasörüne yazılır
+cd .. && colcon build --packages-select yektemak_fleet   # derledikten sonra MUTLAKA
+```
+
+Derlenmiş panel repoda hazır geliyor, yani sadece kullanmak için Node.js gerekmez.
+
+**Fabrikayı değiştirmek:** `tools/generate_factory.py` dosyasındaki istasyonları, rafları ve duvarları düzenleyip çalıştır. İstasyon listesi `yektemak_fleet/config/stations.yaml` dosyasına da yazılır. Haritayı yeniden çıkarmak için:
+
+```bash
+W=$(ros2 pkg prefix yektemak_gazebo)/share/yektemak_gazebo/worlds/factory.world
+ros2 launch yektemak_gazebo sim.launch.py world:=$W x:=0 y:=0
+ros2 launch yektemak_navigation scan_filter.launch.py
+ros2 launch yektemak_navigation slam.launch.py
+ros2 run yektemak_tasks map_explorer --ros-args --params-file \
+  $(ros2 pkg prefix yektemak_tasks)/share/yektemak_tasks/config/factory_explore.yaml
+ros2 run nav2_map_server map_saver_cli -f src/yektemak_navigation/maps/factory
+```
+
+**Koridor trafiği.** İki görevdeki robot birbirine 2.4 m'den fazla yaklaşırsa öncelikli olan devam eder, diğeri durup yol verir. Önce yüklü robot geçer, ikisi de aynıysa görevi daha eski olan. Aralarındaki mesafe 3.2 m'yi geçince bekleyen robot devam eder. Panelde bekleyen robotun kartında "Yol veriyor" rozeti ve haritada sarı kesikli halka görünür. Kilitlenmeye karşı bir robot en fazla 25 sn bekletilir. Yol verme sadece Nav2 sürüşünü durdurur, palet altındaki docking ve lift hareketleri asla yarıda kesilmez.
+
+**Palet altında güvenlik.** Robot paletin altındayken bir hata olursa (lift kalkamazsa, palet kilitlenemezse) önce lift'i indirir, sonra **düz geri** çıkar. Palet altındayken asla yerinde dönmez, parka dönüş de ancak paletten çıktıktan sonra başlar. Acil durdurmada geçen süre zaman aşımlarına sayılmaz, durdurma kaldırılınca robot kaldığı yerden devam eder.
+
+**Önce eski Gazebo'yu kapat.** Daha önceki bir denemeden kalma bir `gzserver` açıksa yeni launch kendi Gazebo'sunu açamaz ve robotları o **eski dünyaya** ekler. Robotlar fabrika haritasıyla başka bir dünyada konum bulmaya çalışır, panelde saçma yerlerde görünür ve tıkanırlar. Launch artık bu durumu algılayıp duruyor ve şu komutu öneriyor:
+
+```bash
+killall -9 gzserver gzclient
+```
+
+Filo yöneticisi de açılışta Gazebo'da fabrika dünyasının yüklü olduğunu doğrular ve sonucu panelin olay akışına yazar.
+
+**Performans.** Gazebo, iki Nav2 yığını ve rosbridge birlikte ağır bir yük. Bilgisayar zorlanırsa ilk iş `gui:=false` ile Gazebo penceresini kapat, panel haritayı zaten gösteriyor.
+
 ## Kurulum (Ubuntu 22.04 + ROS 2 Humble)
 
 ```bash
@@ -67,6 +156,8 @@ ros2 run nav2_map_server map_saver_cli -f src/yektemak_navigation/maps/warehouse
 
 Haritayı yeniden çıkarırsan palet istasyonlarını haritadan temizlemen gerekir (aşağıdaki "Tasarım kararları" bölümüne bak).
 
+**Tek robotlu depo demosu (ilk sürüm):** `ros2 launch yektemak_bringup sim_mission.launch.py`
+
 **Elle test komutları:**
 
 ```bash
@@ -87,7 +178,9 @@ ros2 service call /pallet_attacher/attach std_srvs/srv/SetBool "{data: true}"
 | `yektemak_gazebo_plugins` | Palet bağlayıcı Gazebo plugin'i (C++) |
 | `yektemak_navigation` | LiDAR filtresi, slam_toolbox, Nav2 parametreleri, harita, RViz |
 | `yektemak_tasks` | LiDAR palet tespiti, docking, görev yöneticisi, haritalama gezgini |
-| `yektemak_bringup` | Üç ana launch dosyası (mapping / navigation / mission) |
+| `yektemak_bringup` | Tek robot (mapping / navigation / mission) ve filo (`fleet_sim`, `fleet_demo`) launch dosyaları |
+| `yektemak_fleet` | Filo yöneticisi, istasyon/filo ayarları, derlenmiş operatör paneli |
+| `dashboard/` | React operatör panelinin kaynak kodu |
 
 Ek olarak `tools/generate_world.py` depo dünyasını, palet ve raf modellerini üretir. Dünyayı değiştirmek istersen ölçüleri bu dosyada düzenleyip çalıştırman yeterli.
 
@@ -97,8 +190,8 @@ Ek olarak `tools/generate_world.py` depo dünyasını, palet ve raf modellerini 
 |---|---|
 | Gövde | 0.80 × 0.38 × 0.10 m, 80 kg, yerden 4 cm |
 | Teker | 4 adet, Ø 0.20 m (dış genişlik 0.48 m) |
-| Lift | 0.68 × 0.30 m platform, 0–10 cm strok, PID pozisyon kontrol |
-| LiDAR | Ön tampon, yerden 11 cm, ±100°, 20 m |
+| Lift | 0.68 × 0.30 m platform, 0–18 cm strok (görevde 17 cm kullanılır), PID pozisyon kontrol (palet yerden ~13 cm kalkar, raylar LiDAR düzleminin üstüne çıkar) |
+| LiDAR | Ön ve arka tampon, yerden 11 cm, her biri ±100°, 20 m |
 | IMU | Gövde merkezi, 100 Hz |
 | Palet | 1.20 × 0.80 m, iki raylı (iç aralık 0.60 m), yükle 55 kg |
 
@@ -120,6 +213,8 @@ Ek olarak `tools/generate_world.py` depo dünyasını, palet ve raf modellerini 
 2. **Launch argüman adları çakışabilir.** `gzserver.launch.py` da `params_file` adlı bir argüman tanımlıyor. ROS 2'de launch argümanları include'lar arasında paylaşıldığı için senin argümanın sessizce ezilir. Bu yüzden argümanlar `slam_params_file` ve `nav2_params_file` olarak adlandırıldı.
 3. **Lift PID'i yükü kaldıracak kadar güçlü olmalı.** Düşük kazançla lift 55 kg yük altında sadece 4 cm kalkıyordu. Kazançlar `yektemak_ros2_control.xacro` içinde.
 4. **planar_move ile teker sürtünmesi düşük olmalı**, aksi halde tekerler fren yapar ve yüklü robot devrilmeye çalışır.
+5. **Çoklu robotta Gazebo eklenti namespace'i güvenilir değil.** İkinci robotun `planar_move` ve sensör eklentileri ilk robotun namespace'inde açılıyor, iki robotun odometrisi aynı topic'e akıyordu. Bu yüzden bu eklentilerde topic'ler mutlak adla veriliyor (`/robot2/odom` gibi). Sensör ve eklenti adları da robota özel.
+6. **Panel derlemesinden sonra `colcon build`.** `npm run build` dosya adlarını değiştirir, ROS paketinin kurulu kopyası güncellenmezse panel boş sayfa açar.
 
 ## Gerçek robota geçiş için notlar
 

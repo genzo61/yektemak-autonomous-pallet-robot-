@@ -1,0 +1,17 @@
+# Filo yoneticisi ayarlari
+fleet_manager:
+  ros__parameters:
+    use_sim_time: true
+    robots: ["robot1", "robot2"]
+    homes: ["CH_1", "CH_2"]        # her robotun sarj istasyonu (stations.yaml)
+    auto_start: false              # otomatik uretim modu acilista acik mi
+    battery_low: 30.0              # bunun altinda yeni gorev verilmez, sarja gider
+    battery_ok: 80.0               # sarjdaki robot bu seviyeye gelince yeniden gorev alir
+    auto_process_time: 45.0        # uretim hattinda palet isleme suresi (sim saniye)
+    auto_ship_time: 30.0           # sevkiyatta tirin paleti almasi (sim saniye)
+    # Bolge doluyken robotlarin bekledigi noktalar (ana koridor, sira girisleri) [x, y, yaw]
+    wait_points:
+      inbound: [6.0, -2.6, -1.5708]
+      storage: [19.0, -2.6, -1.5708]
+      production: [14.5, 2.6, 1.5708]
+      outbound: [25.5, -1.0, 0.0]

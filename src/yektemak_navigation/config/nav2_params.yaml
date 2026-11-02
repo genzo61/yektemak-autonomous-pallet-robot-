@@ -6,6 +6,7 @@
 #   * Footprint (bos): 0.94 x 0.50 m. Palet yuklenince gorev yoneticisi
 #     /local_costmap/footprint ve /global_costmap/footprint konularina
 #     1.24 x 0.84 m'lik yuklu footprint'i yayinlar.
+#   * Costmap: on (/scan) + arka (/scan_rear) LiDAR
 #   * Kontrolcu: Regulated Pure Pursuit (yerinde donme acik, geri gitme kapali)
 #   * Yukluyken hiz /speed_limit konusu ile dusurulur.
 #   * AMCL diferansiyel hareket modeli, baslangic pozu (0, 0, 0) = park alani
@@ -120,9 +121,11 @@ local_costmap:
         plugin: nav2_costmap_2d::ObstacleLayer
         enabled: true
         footprint_clearing_enabled: true
-        observation_sources: scan
+        observation_sources: scan scan_rear
         scan: {topic: /scan, data_type: LaserScan, max_obstacle_height: 2.0, clearing: true, marking: true,
           raytrace_max_range: 10.0, raytrace_min_range: 0.0, obstacle_max_range: 8.0, obstacle_min_range: 0.0}
+        scan_rear: {topic: /scan_rear, data_type: LaserScan, max_obstacle_height: 2.0, clearing: true,
+          marking: true, raytrace_max_range: 10.0, raytrace_min_range: 0.0, obstacle_max_range: 8.0, obstacle_min_range: 0.0}
       inflation_layer: {plugin: 'nav2_costmap_2d::InflationLayer', cost_scaling_factor: 4.0, inflation_radius: 0.55}
       rolling_window: true
       width: 5
@@ -145,9 +148,11 @@ global_costmap:
         plugin: nav2_costmap_2d::ObstacleLayer
         enabled: true
         footprint_clearing_enabled: true
-        observation_sources: scan
+        observation_sources: scan scan_rear
         scan: {topic: /scan, data_type: LaserScan, max_obstacle_height: 2.0, clearing: true, marking: true,
           raytrace_max_range: 10.0, raytrace_min_range: 0.0, obstacle_max_range: 8.0, obstacle_min_range: 0.0}
+        scan_rear: {topic: /scan_rear, data_type: LaserScan, max_obstacle_height: 2.0, clearing: true,
+          marking: true, raytrace_max_range: 10.0, raytrace_min_range: 0.0, obstacle_max_range: 8.0, obstacle_min_range: 0.0}
       inflation_layer: {plugin: 'nav2_costmap_2d::InflationLayer', cost_scaling_factor: 4.0, inflation_radius: 0.75}
       plugins: [static_layer, obstacle_layer, inflation_layer]
       static_layer: {plugin: 'nav2_costmap_2d::StaticLayer', map_subscribe_transient_local: true}

@@ -1,4 +1,4 @@
-controller_manager:
+/**/controller_manager:
   ros__parameters:
     update_rate: 100
     use_sim_time: true
@@ -11,7 +11,7 @@ controller_manager:
 
 # Kullanım:
 #   ros2 topic pub --once /lift_controller/commands std_msgs/msg/Float64MultiArray "{data: [0.10]}"
-lift_controller:
+/**/lift_controller:
   ros__parameters:
     joints:
       - lift_platform_joint

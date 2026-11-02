@@ -52,7 +52,7 @@ class MissionManager(BasicNavigator):
         p("return_home", True)
         p("predock_distance", 1.8)
         p("lidar_x", 0.47)
-        p("lift_up", 0.10)
+        p("lift_up", 0.17)
         p("lift_release", 0.045)
         p("loaded_speed_percent", 60.0)
         p("footprint_empty", [0.52, 0.25, -0.42, -0.25])
@@ -116,10 +116,33 @@ class MissionManager(BasicNavigator):
             self.queue.append(task)
             self.say(f"Yeni gorev kuyruga eklendi: {task}")
 
+    # ------------------------------------------------------------------ kancalar
+    # Filo ajani (robot_agent.py) bunlari ezer; tek robot modunda bos.
+    def guard(self):
+        """Uzun dongulerde cagrilir: acil durdurma vb. icin bekletme noktasi.
+        Beklenen sureyi (sim saniye) dondurur; zaman asimlari bu kadar uzatilir."""
+        return 0.0
+
+    def nav_paused(self):
+        """True donerse Nav2 hedefi iptal edilir ve tekrar izin gelene kadar beklenir."""
+        return False
+
+    def on_nav_tick(self):
+        """Nav2 hedefi izlenirken periyodik cagrilir."""
+
+    def wait_resume(self):
+        """nav_paused() True olduktan sonra devam izni gelene kadar bekler."""
+        self.guard()
+
     # ------------------------------------------------------------------ yardimcilar
     def say(self, text):
         self.info(text)
         self.status_pub.publish(String(data=text))
+
+    def sim_now(self):
+        """ROS saati (use_sim_time ile simulasyon saati). Zaman asimlari bununla olculur;
+        simulasyon yavas calistiginda duvar saati yaniltir."""
+        return self.get_clock().now().nanoseconds * 1e-9
 
     def spin_for(self, seconds):
         end = time.time() + seconds
@@ -139,13 +162,25 @@ class MissionManager(BasicNavigator):
 
     def navigate(self, x, y, yaw, label):
         self.say(f"Nav2 -> {label} ({x:.2f}, {y:.2f})")
-        for attempt in range(3):
+        attempt = 0
+        while attempt < 3:
             self.goToPose(self.make_pose(x, y, yaw))
+            paused = False
             while not self.isTaskComplete():
                 rclpy.spin_once(self, timeout_sec=0.05)
+                self.on_nav_tick()
+                if self.nav_paused():
+                    self.cancelTask()
+                    self.stop()
+                    self.wait_resume()
+                    paused = True
+                    break
+            if paused:
+                continue
             if self.getResult() == TaskResult.SUCCEEDED:
                 return
-            self.warn(f"Nav2 hedefe ulasamadi ({label}), tekrar {attempt + 1}/3")
+            attempt += 1
+            self.warn(f"Nav2 hedefe ulasamadi ({label}), tekrar {attempt}/3")
             self.clearAllCostmaps()
             self.spin_for(1.0)
         raise MissionError(f"{label} noktasina gidilemedi")
@@ -170,11 +205,12 @@ class MissionManager(BasicNavigator):
 
     def move_lift(self, height, timeout=8.0):
         msg = Float64MultiArray(data=[float(height)])
-        end = time.time() + timeout
-        while time.time() < end:
+        end = self.sim_now() + timeout
+        while self.sim_now() < end:
+            end += self.guard() or 0.0      # acil durdurmada gecen sure sayilmaz
             self.lift_pub.publish(msg)
             self.spin_for(0.1)
-            if abs(self.lift_pos - height) < 0.006:
+            if abs(self.lift_pos - height) < 0.01:
                 self.spin_for(0.5)
                 return
         raise MissionError(f"Lift {height:.3f} m yuksekligine ulasamadi (su an {self.lift_pos:.3f})")
@@ -189,6 +225,7 @@ class MissionManager(BasicNavigator):
         if res is None or not res.success:
             raise MissionError("Palet kilitlenemedi: " + (res.message if res else "cevap yok"))
         self.info(res.message)
+        return res.message.split(":", 1)[-1].strip() if ":" in res.message else None
 
     def map_yaw_to_odom(self, yaw_map):
         """Haritadaki bir yonu odom cercevesine cevirir (AMCL ile odom arasindaki fark)."""
@@ -205,8 +242,8 @@ class MissionManager(BasicNavigator):
     def measure_pallet(self, expected_yaw_odom, samples=8):
         """Paleti birkac scan ile olcer; odom cercevesinde (x, y, yaw) dondurur."""
         dets, last = [], None
-        end = time.time() + 4.0
-        while len(dets) < samples and time.time() < end:
+        end = self.sim_now() + 4.0
+        while len(dets) < samples and self.sim_now() < end:
             rclpy.spin_once(self, timeout_sec=0.05)
             if self.scan is None or self.scan is last or self.odom is None:
                 continue
@@ -221,12 +258,26 @@ class MissionManager(BasicNavigator):
         ox, oy = transform_point(self.odom, d.x + self.cfg["lidar_x"], d.y)
         return ox, oy, normalize_angle(self.odom[2] + d.yaw)
 
+    def leave_pallet_backwards(self):
+        """Palet altinda bir hata olursa: lift'i indir ve DUZ geri cik.
+        Palet altindayken yerinde donmek robotu raylara carpip sikistirir."""
+        if not getattr(self, "under_pallet", False):
+            return
+        try:
+            self.move_lift(0.0)
+        except MissionError:
+            pass
+        self.say("Hata sonrasi paletin altindan duz geri cikiliyor")
+        self.drive_straight(-(self.cfg["lidar_x"] + 0.55 + 0.55), 0.10)
+        self.under_pallet = False
+
     def drive_straight(self, distance, speed=0.12):
         """Odometriye gore duz git (negatif = geri), baslangic yonunu koruyarak."""
         start = self.odom
         sign = 1.0 if distance >= 0 else -1.0
         while True:
             rclpy.spin_once(self, timeout_sec=0.02)
+            self.guard()
             gone, _ = to_local(start, self.odom[0], self.odom[1])
             remaining = abs(distance) - abs(gone)
             if remaining <= 0.005:
@@ -262,6 +313,7 @@ class MissionManager(BasicNavigator):
         last_refine = 0.0
         while True:
             rclpy.spin_once(self, timeout_sec=0.02)
+            self.guard()
             rx, ry, ryaw = self.odom
             # Robotun palet cercevesindeki konumu (palet merkezi 0, giris -x tarafindan)
             px, py = to_local((tx, ty, tyaw), rx, ry)
@@ -289,6 +341,7 @@ class MissionManager(BasicNavigator):
 
             if px >= -0.005:
                 self.stop()
+                self.under_pallet = True
                 self.spin_for(0.5)
                 px, py = to_local((tx, ty, tyaw), self.odom[0], self.odom[1])
                 self.say(f"Palet altinda: merkez hatasi {px * 100:+.1f} cm ileri, {py * 100:+.1f} cm yan")

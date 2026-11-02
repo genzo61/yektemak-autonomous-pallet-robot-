@@ -7,8 +7,11 @@
 
 import os
 
+import sys
+
 from launch import LaunchDescription
 from launch.actions import (
+    OpaqueFunction,
     DeclareLaunchArgument,
     IncludeLaunchDescription,
     RegisterEventHandler,
@@ -21,6 +24,9 @@ from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitut
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from gazebo_guard import check_no_running_gazebo  # noqa: E402
 
 
 def generate_launch_description():
@@ -104,6 +110,6 @@ def generate_launch_description():
 
     return LaunchDescription(
         declare_args
-        + [model_path, gzserver, gzclient, robot_state_publisher, spawn_robot,
+        + [OpaqueFunction(function=check_no_running_gazebo), model_path, gzserver, gzclient, robot_state_publisher, spawn_robot,
            start_controllers]
     )
