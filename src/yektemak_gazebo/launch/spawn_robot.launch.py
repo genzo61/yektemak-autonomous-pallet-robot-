@@ -19,13 +19,14 @@ from launch.substitutions import Command, PathJoinSubstitution
 def setup(context):
     ns = LaunchConfiguration("ns").perform(context)
     color = LaunchConfiguration("color").perform(context)
+    layout = LaunchConfiguration("lidar_layout").perform(context)
     x, y, yaw = (LaunchConfiguration(k).perform(context) for k in ("x", "y", "yaw"))
 
     description = ParameterValue(
         Command(["xacro ",
                  PathJoinSubstitution([FindPackageShare("yektemak_description"), "urdf",
                                        "yektemak_robot.urdf.xacro"]),
-                 f" use_sim:=true ns:={ns} body_color:={color}"]),
+                 f" use_sim:=true ns:={ns} body_color:={color} lidar_layout:={layout}"]),
         value_type=str)
 
     rsp = Node(
@@ -40,14 +41,13 @@ def setup(context):
                    "-x", x, "-y", y, "-z", "0.01", "-Y", yaw],
     )
 
-    def spawner(name):
-        return Node(package="controller_manager", executable="spawner", output="screen",
-                    arguments=[name, "--controller-manager", f"/{ns}/controller_manager",
-                               "--controller-manager-timeout", "90"])
-
-    controllers = RegisterEventHandler(OnProcessExit(
-        target_action=spawn,
-        on_exit=[spawner("joint_state_broadcaster"), spawner("lift_controller")]))
+    # controller_manager/spawner yerine: yogun CPU altinda "zaten yuklu" hatasiyla
+    # olmeden controller'lari aktif edene kadar ugrasan kendi baslaticimiz
+    starter = Node(package="yektemak_tasks", executable="controller_starter", output="screen",
+                   name=f"{ns}_controller_starter",
+                   parameters=[{"controller_manager": f"/{ns}/controller_manager",
+                                "controllers": ["joint_state_broadcaster", "lift_controller"]}])
+    controllers = RegisterEventHandler(OnProcessExit(target_action=spawn, on_exit=[starter]))
     return [rsp, spawn, controllers]
 
 
@@ -55,6 +55,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("ns", default_value="robot1"),
         DeclareLaunchArgument("color", default_value="Blue"),
+        DeclareLaunchArgument("lidar_layout", default_value="front_rear", description="front_rear | corners"),
         DeclareLaunchArgument("x", default_value="0.0"),
         DeclareLaunchArgument("y", default_value="0.0"),
         DeclareLaunchArgument("yaw", default_value="0.0"),

@@ -22,7 +22,12 @@
   <xacro:include filename="yektemak_wheels.xacro"/>
   <xacro:include filename="yektemak_lift.xacro"/>
   <xacro:include filename="yektemak_markers.xacro"/>
+  <!-- LiDAR duzeni - front_rear (fabrika, on + arka) ya da corners (liman, 4 kose) -->
+  <xacro:arg name="lidar_layout" default="front_rear"/>
   <xacro:include filename="yektemak_sensors.xacro"/>
+  <xacro:if value="${'$(arg lidar_layout)' == 'corners'}">
+    <xacro:include filename="yektemak_corner_lidars.xacro"/>
+  </xacro:if>
 
   <xacro:if value="$(arg use_sim)">
     <xacro:include filename="yektemak_ros2_control.xacro"/>

@@ -26,6 +26,8 @@ setup(
             "map_explorer = yektemak_tasks.map_explorer:main",
             "mission_manager = yektemak_tasks.mission_manager:main",
             "robot_agent = yektemak_tasks.robot_agent:main",
+            "scan_merger = yektemak_tasks.scan_merger:main",
+            "controller_starter = yektemak_tasks.controller_starter:main",
         ],
     },
 )

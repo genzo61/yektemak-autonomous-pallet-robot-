@@ -1,0 +1,16 @@
+# Liman senaryosu filo ayarlari (3 robot, RTK-GNSS)
+fleet_manager:
+  ros__parameters:
+    use_sim_time: true
+    robots: ["robot1", "robot2", "robot3"]
+    homes: ["CH_1", "CH_2", "CH_3"]
+    auto_start: false
+    battery_low: 30.0
+    battery_ok: 80.0
+    auto_process_time: 45.0        # konteyner doldurma suresi (sim saniye)
+    auto_ship_time: 30.0           # gemiye yukleme / tirin gelmesi (sim saniye)
+    wait_points:
+      inbound: [10.0, -10.5, -1.5708]
+      storage: [9.0, -1.0, 0.0]
+      production: [38.0, -1.0, 0.0]
+      outbound: [14.0, 11.0, 0.0]

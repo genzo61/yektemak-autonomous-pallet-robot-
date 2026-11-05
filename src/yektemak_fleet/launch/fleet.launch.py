@@ -16,21 +16,27 @@ from launch_ros.actions import Node
 
 def setup(context):
     share = get_package_share_directory("yektemak_fleet")
-    stations_file = os.path.join(share, "config", "stations.yaml")
+    scenario = LaunchConfiguration("scenario").perform(context)
+    prefix = "port_" if scenario == "port" else ""
+    stations_file = os.path.join(share, "config", f"{prefix}stations.yaml")
     stations = yaml.safe_load(open(stations_file))["stations"]
-    fleet_cfg = os.path.join(share, "config", "fleet.yaml")
+    fleet_cfg = os.path.join(share, "config", f"{prefix}fleet.yaml")
     params = yaml.safe_load(open(fleet_cfg))["fleet_manager"]["ros__parameters"]
     auto = LaunchConfiguration("auto").perform(context).lower() == "true"
+    n = int(LaunchConfiguration("robots").perform(context) or 0)
+    if n > 0:
+        params["robots"], params["homes"] = params["robots"][:n], params["homes"][:n]
 
     nodes = [Node(package="yektemak_fleet", executable="fleet_manager", name="fleet_manager",
                   output="screen",
-                  parameters=[fleet_cfg, {"stations_file": stations_file, "auto_start": auto}])]
+                  parameters=[fleet_cfg, {"stations_file": stations_file, "auto_start": auto,
+                                          "robots": params["robots"], "homes": params["homes"]}])]
     for robot, home in zip(params["robots"], params["homes"]):
         h = stations[home]
         nodes.append(Node(
             package="yektemak_tasks", executable="robot_agent", name="robot_agent",
             namespace=robot, output="screen",
-            parameters=[os.path.join(share, "config", "agent.yaml"),
+            parameters=[os.path.join(share, "config", f"{prefix}agent.yaml"),
                         {"robot_name": robot, "home": [h["x"], h["y"], h["yaw"]]}]))
     nodes.append(Node(package="rosbridge_server", executable="rosbridge_websocket",
                       name="rosbridge_websocket", output="screen",
@@ -42,6 +48,8 @@ def setup(context):
 
 def generate_launch_description():
     return LaunchDescription([
+        DeclareLaunchArgument("scenario", default_value="factory", description="factory | port"),
+        DeclareLaunchArgument("robots", default_value="0", description="0 = config dosyasindaki tum robotlar"),
         DeclareLaunchArgument("auto", default_value="false",
                               description="Otomatik uretim modu acilista acik mi"),
         OpaqueFunction(function=setup),

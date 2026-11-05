@@ -37,6 +37,7 @@
     <material>Gazebo/Red</material>
   </gazebo>
 
+<xacro:if value="${'$(arg lidar_layout)' == 'front_rear'}">
   <gazebo reference="lidar_link">
     <material>Gazebo/FlatBlack</material>
   </gazebo>
@@ -52,6 +53,7 @@
   <gazebo reference="lidar_bracket_link">
     <material>Gazebo/Grey</material>
   </gazebo>
+  </xacro:if>
 
   <!-- ================= Sürüş =================
        planar_move gövdeyi doğrudan hız komutuyla sürer; 4 tekerli skid-steer
@@ -108,6 +110,7 @@
     </plugin>
   </gazebo>
 
+  <xacro:if value="${'$(arg lidar_layout)' == 'front_rear'}">
   <!-- Not - sensor ve eklenti adlari ns ile baslar. Iki robotta ayni ad
        kullanilirsa Gazebo eklentileri karisiyor ve bir robotun LiDAR verisi
        digerinin topicine akiyor. -->
@@ -190,6 +193,8 @@
       </plugin>
     </sensor>
   </gazebo>
+
+  </xacro:if>
 
   <!-- ================= IMU ================= -->
   <gazebo reference="imu_link">

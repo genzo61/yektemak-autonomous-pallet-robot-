@@ -36,6 +36,8 @@ class RobotAgent(MissionManager):
         p("battery_idle_per_s", 0.004)    # %/s
         p("battery_charge_per_s", 0.6)    # %/s (sarjdayken)
         p("zone_release_distance", 4.0)   # m
+        # Konum kaynagi: amcl (fabrika) ya da map_server (liman: RTK + EKF, AMCL yok)
+        p("localizer", "amcl")
         g = lambda n: self.get_parameter(n).value  # noqa: E731
         self.name = g("robot_name")
         self.bat_m, self.bat_idle, self.bat_charge = g("battery_per_meter"), g("battery_idle_per_s"), g("battery_charge_per_s")
@@ -58,12 +60,16 @@ class RobotAgent(MissionManager):
         self.returning = False
         self.idle_since = None
         self.under_pallet = False
+        self.gnss = None           # RTK durumu (liman senaryosu); None = GNSS yok
+        self.base_speed = 100.0
+        self.gnss_factor = 1.0
 
         latched = QoSProfile(depth=1, reliability=ReliabilityPolicy.RELIABLE,
                              durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(String, "agent/task", self._on_task, 10)
         self.create_subscription(Bool, "agent/estop", self._on_estop, latched)
         self.create_subscription(Bool, "agent/hold", self._on_hold, latched)
+        self.create_subscription(String, "gnss/quality", self._on_gnss, 10)
         self.create_subscription(String, "/fleet/locks", self._on_locks, latched)
         self.status_pub = self.create_publisher(String, "/fleet/robot_status", 10)
         self.result_pub = self.create_publisher(String, "/fleet/task_result", 10)
@@ -85,6 +91,27 @@ class RobotAgent(MissionManager):
 
     def _on_hold(self, msg):
         self.hold = msg.data
+
+    # RTK kalitesine gore hiz: FIX tam, FLOAT %35, SINGLE %15, yok = dur
+    GNSS_SPEED = {"FIX": 1.0, "FLOAT": 0.35, "SINGLE": 0.15, "NONE": 0.0}
+
+    def _on_gnss(self, msg):
+        try:
+            q = json.loads(msg.data)
+        except ValueError:
+            return
+        prev = self.gnss["mode"] if self.gnss else None
+        self.gnss = q
+        f = self.GNSS_SPEED.get(q.get("mode"), 0.0)
+        if f != self.gnss_factor:
+            self.gnss_factor = f
+            self.publish_speed(self.base_speed)
+        if prev and prev != q.get("mode"):
+            self.info(f"RTK: {prev} -> {q.get('mode')}" + (f" ({q['zone']})" if q.get("zone") else ""))
+
+    def publish_speed(self, percent):
+        eff = percent * self.gnss_factor if self.gnss is not None else percent
+        super().publish_speed(max(1.0, eff) if eff < 100 else 100.0)
 
     def _on_locks(self, msg):
         try:
@@ -135,7 +162,7 @@ class RobotAgent(MissionManager):
         self.status_pub.publish(String(data=json.dumps({
             "robot": self.name, "state": state, "step": self.step,
             "battery": round(self.battery, 1), "x": round(x, 3), "y": round(y, 3), "yaw": round(yaw, 3),
-            "loaded": self.loaded, "pallet": self.pallet, "estop": self.estop,
+            "loaded": self.loaded, "pallet": self.pallet, "estop": self.estop, "gnss": self.gnss,
             "task_id": self.task["id"] if self.task else None})))
 
     def say(self, text):
@@ -154,14 +181,19 @@ class RobotAgent(MissionManager):
         self.say("Acil durdurma kaldirildi, kalinan yerden devam ediliyor")
         return self.sim_now() - t0
 
+    def gnss_lost(self):
+        return self.gnss is not None and self.gnss.get("mode") == "NONE"
+
     def nav_paused(self):
-        return self.estop or self.hold
+        return self.estop or self.hold or self.gnss_lost()
 
     def wait_resume(self):
         """Acil durdurma ya da trafik beklemesi bitene kadar dur."""
         prev = self.step
-        while (self.estop or self.hold) and rclpy.ok():
-            if self.hold and not self.estop:
+        while (self.estop or self.hold or self.gnss_lost()) and rclpy.ok():
+            if self.gnss_lost() and not self.estop:
+                self.step = "RTK sinyali yok, konum guvenilir degil: bekleniyor"
+            elif self.hold and not self.estop:
                 self.step = "Trafik: diger robota yol veriliyor"
             self.stop()
             rclpy.spin_once(self, timeout_sec=0.1)
@@ -274,8 +306,10 @@ class RobotAgent(MissionManager):
 
     def run(self):
         x, y, yaw = self.home
-        self.setInitialPose(self.make_pose(x, y, yaw))
-        self.waitUntilNav2Active()
+        loc = self.get_parameter("localizer").value
+        if loc == "amcl":
+            self.setInitialPose(self.make_pose(x, y, yaw))
+        self.waitUntilNav2Active(localizer=loc)
         self.set_loaded(False)
         self.say("Hazir, filodan gorev bekleniyor")
         while rclpy.ok():

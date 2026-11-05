@@ -92,19 +92,13 @@ def generate_launch_description():
                    "-x", x, "-y", y, "-z", "0.01", "-Y", yaw],
     )
 
-    def spawner(name):
-        return Node(
-            package="controller_manager",
-            executable="spawner",
-            output="screen",
-            arguments=[name, "--controller-manager", "/controller_manager",
-                       "--controller-manager-timeout", "60"],
-        )
-
+    # controller_manager/spawner yerine yektemak_tasks/controller_starter (bkz. o dosya)
     start_controllers = RegisterEventHandler(
         OnProcessExit(
             target_action=spawn_robot,
-            on_exit=[spawner("joint_state_broadcaster"), spawner("lift_controller")],
+            on_exit=[Node(package="yektemak_tasks", executable="controller_starter", output="screen",
+                          parameters=[{"controller_manager": "/controller_manager",
+                                       "controllers": ["joint_state_broadcaster", "lift_controller"]}])],
         )
     )
 

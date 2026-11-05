@@ -1,0 +1,153 @@
+# tools/generate_port.py ile uretildi. Dunya ile ayni olmali.
+scenario: port
+map: port
+datum:
+  lat: 40.965
+  lon: 27.0
+stations:
+  CH_1:
+    x: 0.0
+    y: 10.0
+    yaw: 0.0
+    type: charge
+  CH_2:
+    x: 0.0
+    y: 13.0
+    yaw: 0.0
+    type: charge
+  CH_3:
+    x: 0.0
+    y: 16.0
+    yaw: 0.0
+    type: charge
+  GATE_1:
+    x: 8.0
+    y: -15.0
+    yaw: -1.5708
+    type: inbound
+  GATE_2:
+    x: 12.0
+    y: -15.0
+    yaw: -1.5708
+    type: inbound
+  GATE_3:
+    x: 16.0
+    y: -15.0
+    yaw: -1.5708
+    type: inbound
+  YARD_1:
+    x: 17.0
+    y: -1.0
+    yaw: -1.5708
+    type: storage
+  YARD_2:
+    x: 21.0
+    y: -1.0
+    yaw: -1.5708
+    type: storage
+  YARD_3:
+    x: 25.0
+    y: -1.0
+    yaw: -1.5708
+    type: storage
+  YARD_4:
+    x: 29.0
+    y: -1.0
+    yaw: -1.5708
+    type: storage
+  CNT_1:
+    x: 42.0
+    y: 5.0
+    yaw: 0.0
+    type: production
+  CNT_2:
+    x: 42.0
+    y: -7.0
+    yaw: 0.0
+    type: production
+  QUAY_1:
+    x: 21.0
+    y: 15.0
+    yaw: 1.5708
+    type: outbound
+  QUAY_2:
+    x: 26.0
+    y: 15.0
+    yaw: 1.5708
+    type: outbound
+  QUAY_3:
+    x: 31.0
+    y: 15.0
+    yaw: 1.5708
+    type: outbound
+initial_pallets:
+  GATE_1: pallet_1
+  GATE_2: pallet_2
+  GATE_3: pallet_3
+  YARD_1: pallet_4
+  YARD_2: pallet_5
+zones:
+  inbound:
+    label: Giris kapisi
+    rect:
+    - 12.0
+    - -15.6
+    - 13.0
+    - 6.0
+  storage:
+    label: Konteyner sahasi
+    rect:
+    - 23.0
+    - -1.0
+    - 16.0
+    - 5.6
+  production:
+    label: Konteyner doldurma
+    rect:
+    - 43.5
+    - -1.0
+    - 6.0
+    - 16.0
+  outbound:
+    label: Rihtim / gemi
+    rect:
+    - 26.0
+    - 15.6
+    - 14.0
+    - 5.6
+  charge:
+    label: Sarj
+    rect:
+    - 0.0
+    - 13.0
+    - 2.6
+    - 9.0
+gnss_zones:
+- name: konteyner sokagi
+  rect:
+  - 12.0
+  - -3.6
+  - 34.0
+  - 1.6
+  cap: FLOAT
+- name: kren alti
+  rect:
+  - 17.0
+  - 13.0
+  - 35.0
+  - 19.7
+  cap: FLOAT
+- name: ofis yani
+  rect:
+  - -4.0
+  - 7.0
+  - 2.0
+  - 19.0
+  cap: FLOAT
+- name: konteyner ici
+  rect:
+  - 43.0
+  - -8.5
+  - 49.5
+  - 6.5
+  cap: SINGLE

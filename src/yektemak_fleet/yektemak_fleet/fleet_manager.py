@@ -58,6 +58,10 @@ class FleetManager(Node):
         self.core = FleetCore(data["stations"], dict(zip(g("robots"), g("homes"))),
                               data.get("initial_pallets", {}), waits, cfg, clock)
         self.core.auto = bool(g("auto_start"))
+        # Panel icin senaryo bilgisi: hangi harita, bolge adlari/cerceveleri
+        self.meta = {"scenario": data.get("scenario", "factory"), "map": data.get("map", "map"),
+                     "zones": data.get("zones"), "base_down": False,
+                     "has_gnss": bool(data.get("gnss_zones") is not None)}
 
         latched = QoSProfile(depth=1, reliability=ReliabilityPolicy.RELIABLE,
                              durability=DurabilityPolicy.TRANSIENT_LOCAL)
@@ -68,13 +72,15 @@ class FleetManager(Node):
                            for r in self.core.robots}
         self.hold_pubs = {r: self.create_publisher(Bool, f"/{r}/agent/hold", latched)
                           for r in self.core.robots}
+        self.base_pub = self.create_publisher(Bool, "/gnss/base_station_down", latched)
         self.create_subscription(String, "/fleet/command", self.on_command, 20)
         self.create_subscription(String, "/fleet/robot_status", self.on_status, 50)
         self.create_subscription(String, "/fleet/task_result", self.on_result, 20)
         self.create_subscription(String, "/fleet/zone_request", self.on_zone, 50)
         self.gz = self.create_client(SetEntityState, "/gazebo/set_entity_state")
         self.gz_get = self.create_client(GetEntityState, "/gazebo/get_entity_state")
-        self.declare_parameter("expected_world_model", "factory_building")
+        self.declare_parameter("expected_world_model",
+                               "port_yard" if data.get("scenario") == "port" else "factory_building")
         self.world_checked = False
 
         self.create_timer(0.5, self.on_timer)
@@ -130,6 +136,12 @@ class FleetManager(Node):
                     c.robots[r].estop = on
             c.log(f"ACIL DURDURMA {'AKTIF' if on else 'kaldirildi'}: {', '.join(targets)}",
                   "error" if on else "info")
+        elif cmd == "base_station":
+            down = bool(d.get("down", True))
+            self.base_pub.publish(Bool(data=down))
+            self.meta["base_down"] = down
+            c.log("RTK baz istasyonu KAPATILDI: robotlar duzeltme alamayacak (FIX -> FLOAT -> SINGLE)"
+                  if down else "RTK baz istasyonu tekrar acildi", "warn" if down else "info")
         elif cmd == "auto":
             c.auto = bool(d.get("on"))
             c.log(f"Otomatik uretim modu {'ACIK' if c.auto else 'KAPALI'}")
@@ -167,7 +179,9 @@ class FleetManager(Node):
         while self.core.sim_actions:
             self.do_sim_action(self.core.sim_actions.pop(0))
         self.publish_locks()
-        self.state_pub.publish(String(data=json.dumps(self.core.snapshot())))
+        snap = self.core.snapshot()
+        snap.update(self.meta)
+        self.state_pub.publish(String(data=json.dumps(snap)))
 
     def publish_locks(self, force=False):
         s = json.dumps(self.core.locks, sort_keys=True)

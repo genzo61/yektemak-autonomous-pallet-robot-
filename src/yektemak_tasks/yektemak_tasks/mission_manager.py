@@ -52,6 +52,10 @@ class MissionManager(BasicNavigator):
         p("return_home", True)
         p("predock_distance", 1.8)
         p("lidar_x", 0.47)
+        # Docking taramasi: tek robot / fabrika = on LiDAR (scan_raw, LiDAR 0.47 m onde);
+        # liman = 4 LiDAR birlesik scan_dock (robot merkezinde, ofset 0)
+        p("dock_scan_topic", "scan_raw")
+        p("dock_scan_offset_x", -1.0)   # < 0 ise lidar_x kullanilir
         p("lift_up", 0.17)
         p("lift_release", 0.045)
         p("loaded_speed_percent", 60.0)
@@ -74,6 +78,8 @@ class MissionManager(BasicNavigator):
             "return_home", "predock_distance", "lidar_x", "lift_up", "lift_release",
             "loaded_speed_percent", "footprint_empty", "footprint_loaded", "dock_speed",
             "dock_gate_lateral", "dock_gate_heading", "dock_retries", "undock_distance")}
+        off = g("dock_scan_offset_x")
+        self.cfg["dock_offset"] = self.cfg["lidar_x"] if off < 0 else off
 
         self.odom = None
         self.scan = None
@@ -81,7 +87,7 @@ class MissionManager(BasicNavigator):
         self.lift_pos = 0.0
 
         self.create_subscription(Odometry, "odom", self._on_odom, 20)
-        self.create_subscription(LaserScan, "scan_raw", self._on_scan, qos_profile_sensor_data)
+        self.create_subscription(LaserScan, g("dock_scan_topic"), self._on_scan, qos_profile_sensor_data)
         self.create_subscription(JointState, "joint_states", self._on_joints, 20)
         self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self._on_amcl, 10)
         self.create_subscription(String, "mission/request", self._on_request, 10)
@@ -193,6 +199,10 @@ class MissionManager(BasicNavigator):
             pub.publish(poly)
 
     def set_speed(self, percent):
+        self.base_speed = percent
+        self.publish_speed(percent)
+
+    def publish_speed(self, percent):
         msg = SpeedLimit()
         msg.percentage = True
         msg.speed_limit = float(percent) if percent < 100 else 0.0  # 0 = limitsiz
@@ -255,7 +265,7 @@ class MissionManager(BasicNavigator):
             return None
         d = average_detections(dets)
         # LiDAR cercevesi -> base_footprint -> odom
-        ox, oy = transform_point(self.odom, d.x + self.cfg["lidar_x"], d.y)
+        ox, oy = transform_point(self.odom, d.x + self.cfg["dock_offset"], d.y)
         return ox, oy, normalize_angle(self.odom[2] + d.yaw)
 
     def leave_pallet_backwards(self):
@@ -324,7 +334,7 @@ class MissionManager(BasicNavigator):
                 last_refine = time.time()
                 d = self.detect(tyaw)
                 if d is not None:
-                    nx, ny = transform_point(self.odom, d.x + lidar_x, d.y)
+                    nx, ny = transform_point(self.odom, d.x + self.cfg["dock_offset"], d.y)
                     nyaw = normalize_angle(ryaw + d.yaw)
                     if math.hypot(nx - tx, ny - ty) < 0.15:
                         k = 0.3

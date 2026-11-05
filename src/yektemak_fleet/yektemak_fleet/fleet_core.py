@@ -80,6 +80,7 @@ class Robot:
     last_seen: float = 0.0
     estop: bool = False
     tasks_done: int = 0
+    gnss: Optional[dict] = None   # RTK durumu (liman senaryosu)
 
 
 @dataclass
@@ -236,7 +237,7 @@ class FleetCore:
         if not r:
             return
         was_offline = r.state == "offline"
-        for k in ("state", "step", "battery", "x", "y", "yaw", "loaded", "pallet", "estop"):
+        for k in ("state", "step", "battery", "x", "y", "yaw", "loaded", "pallet", "estop", "gnss"):
             if k in s:
                 setattr(r, k, s[k])
         r.last_seen = self.clock()

@@ -1,0 +1,23 @@
+# Liman senaryosu robot ajani ayarlari: 4 kose LiDAR birlesik taramayla docking
+/**/robot_agent:
+  ros__parameters:
+    use_sim_time: true
+    localizer: map_server          # RTK + EKF, AMCL yok
+    predock_distance: 1.8
+    lidar_x: 0.47                  # on kose LiDARlarin x konumu (hizalama kapisi icin)
+    dock_scan_topic: scan_dock     # scan_merger ciktisi, robot merkezinde
+    dock_scan_offset_x: 0.0
+    dock_speed: 0.12
+    dock_gate_lateral: 0.035
+    dock_gate_heading: 0.05
+    dock_retries: 2
+    undock_distance: 1.3
+    lift_up: 0.17
+    lift_release: 0.045
+    loaded_speed_percent: 60.0
+    footprint_empty: [0.53, 0.25, -0.53, -0.25]
+    footprint_loaded: [0.62, 0.42, -0.62, -0.42]
+    battery_per_meter: 0.15
+    battery_idle_per_s: 0.004
+    battery_charge_per_s: 0.6
+    zone_release_distance: 5.0
