@@ -103,6 +103,49 @@ Filo yöneticisi de açılışta Gazebo'da fabrika dünyasının yüklü olduğu
 
 **Performans.** Gazebo, iki Nav2 yığını ve rosbridge birlikte ağır bir yük. Bilgisayar zorlanırsa ilk iş `gui:=false` ile Gazebo penceresini kapat, panel haritayı zaten gösteriyor.
 
+## Liman senaryosu: açık alan, RTK-GNSS, 4 köşe LiDAR, 3 robot
+
+![Liman paneli](docs/images/liman_panel.jpg)
+
+| Şarjdaki 3 robot (4 köşe LiDAR) | Liman sahası |
+|---|---|
+| ![Robotlar](docs/images/liman_robotlar.jpg) | ![Saha](docs/images/liman_saha.jpg) |
+
+64 × 40 m'lik açık bir liman sahası. Akış şöyle: **giriş kapısı** (GATE, tırdan gelen paletler) → **konteyner sahası** (YARD, iki konteyner bloğunun arasındaki "sokak") → **konteyner doldurma** (CNT, kapısı açık konteynerler) → **rıhtım** (QUAY, kren altında gemiye yükleme). Sahada 3 robot ve 3 şarj istasyonu var.
+
+```bash
+killall -9 gzserver gzclient
+ros2 launch yektemak_bringup port_demo.launch.py
+# tarayıcıda: http://localhost:8080
+```
+
+| Argüman | Etkisi |
+|---|---|
+| `robots:=2` | Robot sayısı (1–3). Bilgisayar zorlanırsa azalt |
+| `gui:=false` | Gazebo penceresi kapalı, çok daha hafif |
+| `auto:=true` | Otomatik akış açılışta başlar |
+
+**Ek kurulum:** `sudo apt install -y ros-humble-robot-localization`
+
+**Konum bulma: RTK-GNSS + IMU + odometri.** Açık sahada duvar az olduğu için AMCL yerine gerçek RTK'lı AMR'lerdeki zincir kullanılıyor. `rtk_simulator` RTK alıcısını taklit edip `gnss/fix` (NavSatFix) yayınlar. `navsat_transform_node` bunu harita koordinatına çevirir, `ekf_node` da IMU yönü ve tekerlek odometrisiyle birleştirip `map → robotX/odom` dönüşümünü yayınlar. Dünyanın orijini GNSS datumudur (40.965° K, 27.000° D), Gazebo'nun x ekseni doğuyu, y ekseni kuzeyi gösterir.
+
+**RTK durumları gerçek alıcı gibi davranır:**
+
+| Durum | Ne zaman | Hata | Robot |
+|---|---|---|---|
+| FIX | Açık gökyüzü, taze baz istasyonu düzeltmesi | ~1.5 cm | Tam hız |
+| FLOAT | Konteyner sokağı, kren altı, ofis yanı, düzeltme 5–30 sn eski ya da bağlantı dönünce yakınsama | ~25 cm + yavaş kayma | %35 hız |
+| SINGLE | Düzeltme 30 sn'den eski, konteyner içi | ~1.8 m | %15 hız (emekleyerek çıkar) |
+| Sinyal yok | Nadir, kısa alıcı kesintisi | konum yok | Durur, sinyal gelince devam eder |
+
+Baz istasyonu bağlantısı ara sıra kendiliğinden kopar. Panelin üst şeridindeki **RTK baz istasyonu** düğmesiyle istasyonu elle de kapatabilirsin: robotlar önce FLOAT'a, 30 sn sonra SINGLE'a düşer ve yavaşlar. Açınca birkaç saniye yakınsayıp FIX'e döner. Her robotun RTK durumu, hata payı ve uydu sayısı kartında görünür. Docking ve lift RTK'dan etkilenmez, çünkü onlar paletin kendisine göre LiDAR ile yapılır.
+
+Testte ölçülen konum hatası FIX'te yaklaşık **2.5 cm**, FLOAT'ta yaklaşık 30 cm.
+
+**4 köşe LiDAR.** Her köşede çapraz yöne bakan, 270° görüşlü bir 2D LiDAR var, yani kör nokta yok. `scan_merger` dördünü tek bir 360° taramada birleştirir. `scan` Nav2 için (taşınan paletin izdüşümü temizlenmiş), `scan_dock` docking için (sadece robotun kendi gövdesi temizlenmiş). Fabrika senaryosu ön ve arka LiDAR düzeniyle çalışmaya devam eder (`lidar_layout:=front_rear`).
+
+**Liman sahasını değiştirmek:** `tools/generate_port.py` dosyasını düzenleyip çalıştır. Dünya, harita (dünya geometrisinden), istasyonlar, bölgeler, GNSS gölge bölgeleri ve panel haritası birlikte üretilir.
+
 ## Kurulum (Ubuntu 22.04 + ROS 2 Humble)
 
 ```bash
@@ -179,6 +222,7 @@ ros2 service call /pallet_attacher/attach std_srvs/srv/SetBool "{data: true}"
 | `yektemak_navigation` | LiDAR filtresi, slam_toolbox, Nav2 parametreleri, harita, RViz |
 | `yektemak_tasks` | LiDAR palet tespiti, docking, görev yöneticisi, haritalama gezgini |
 | `yektemak_bringup` | Tek robot (mapping / navigation / mission) ve filo (`fleet_sim`, `fleet_demo`) launch dosyaları |
+| `yektemak_gnss` | RTK-GNSS alıcı modeli ve simülatörü, WGS84 ↔ UTM dönüşümü |
 | `yektemak_fleet` | Filo yöneticisi, istasyon/filo ayarları, derlenmiş operatör paneli |
 | `dashboard/` | React operatör panelinin kaynak kodu |
 
@@ -214,6 +258,7 @@ Ek olarak `tools/generate_world.py` depo dünyasını, palet ve raf modellerini 
 3. **Lift PID'i yükü kaldıracak kadar güçlü olmalı.** Düşük kazançla lift 55 kg yük altında sadece 4 cm kalkıyordu. Kazançlar `yektemak_ros2_control.xacro` içinde.
 4. **planar_move ile teker sürtünmesi düşük olmalı**, aksi halde tekerler fren yapar ve yüklü robot devrilmeye çalışır.
 5. **Çoklu robotta Gazebo eklenti namespace'i güvenilir değil.** İkinci robotun `planar_move` ve sensör eklentileri ilk robotun namespace'inde açılıyor, iki robotun odometrisi aynı topic'e akıyordu. Bu yüzden bu eklentilerde topic'ler mutlak adla veriliyor (`/robot2/odom` gibi). Sensör ve eklenti adları da robota özel.
+7. **Spawner yük altında controller'ı aktif etmeden ölebiliyor.** Servis çağrısı zaman aşımına düşünce tekrar deniyor, controller "zaten yüklü" olduğu için hata verip ölüyor. Lift controller yüklü ama aktif olmayan halde kalıyor. Bu yüzden `yektemak_tasks/controller_starter` kullanılıyor: durumu sorup eksik adımları tamamlıyor.
 6. **Panel derlemesinden sonra `colcon build`.** `npm run build` dosya adlarını değiştirir, ROS paketinin kurulu kopyası güncellenmezse panel boş sayfa açar.
 
 ## Gerçek robota geçiş için notlar

@@ -14,6 +14,20 @@ function Battery({ value }) {
   );
 }
 
+const RTK_TEXT = { FIX: "RTK FIX", FLOAT: "RTK FLOAT", SINGLE: "GNSS (RTK yok)", NONE: "GNSS sinyali yok" };
+
+function Rtk({ g }) {
+  if (!g) return null;
+  return (
+    <div className={`rtk rtk-${g.mode}`} title="RTK-GNSS durumu">
+      <b>{RTK_TEXT[g.mode] || g.mode}</b>
+      <span>{g.sigma != null ? `±${g.sigma < 0.1 ? (g.sigma * 100).toFixed(1) + " cm" : g.sigma.toFixed(2) + " m"}` : "konum yok"}</span>
+      <span>{g.sats} uydu</span>
+      {g.zone && <span className="rtk-zone">{g.zone}</span>}
+    </div>
+  );
+}
+
 function RobotCard({ r, i, task, send, hold }) {
   const color = robotColor(r.name, i);
   return (
@@ -26,6 +40,7 @@ function RobotCard({ r, i, task, send, hold }) {
       </header>
       <p className="step">{r.state === "offline" ? "Robottan haber alınamıyor" : r.step || "—"}</p>
       <Battery value={r.battery} />
+      <Rtk g={r.gnss} />
       <dl>
         <div><dt>Görev</dt><dd>{task ? `${task.id} · ${task.kind === "transport" ? `${task.pick} → ${task.drop}` : task.target}` : "yok"}</dd></div>
         <div><dt>Yük</dt><dd>{r.loaded ? r.pallet || "palet" : "boş"}</dd></div>
@@ -50,7 +65,8 @@ function TaskComposer({ state, selection, setSelection, send }) {
   const pickable = stations.filter((s) => s.pallet && !s.reserved_by && s.type !== "charge");
   const droppable = stations.filter((s) => !s.pallet && !s.reserved_by && s.type !== "charge");
   const robots = state?.robots || [];
-  const opt = (s) => <option key={s.name} value={s.name}>{s.name} · {ZONE_NAME[s.type]}</option>;
+  const zname = (t) => state?.zones?.[t]?.label || ZONE_NAME[t];
+  const opt = (s) => <option key={s.name} value={s.name}>{s.name} · {zname(s.type)}</option>;
   const ready = selection.pick && selection.drop;
   return (
     <section className="composer">
@@ -125,7 +141,7 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <span className="mark" aria-hidden="true" />
-          <h1>Yektemak filo kontrol</h1>
+          <h1>Yektemak filo kontrol{state?.scenario === "port" ? " · Liman" : ""}</h1>
         </div>
         <div className={`conn conn-${status}`}>
           {status === "bagli" ? (state ? "Filo bağlı" : "Filo yöneticisi bekleniyor")
@@ -136,6 +152,13 @@ export default function App() {
           <div><b>{state?.stats.shipped ?? 0}</b><span>sevk</span></div>
           <div><b>{tasks.filter((t) => ["queued", "assigned", "running"].includes(t.state)).length}</b><span>açık görev</span></div>
         </div>
+        {state?.has_gnss && (
+          <button className={`base ${state.base_down ? "down" : ""}`}
+                  onClick={() => send({ cmd: "base_station", down: !state.base_down })}
+                  title="RTK düzeltme verisini gönderen sabit baz istasyonu">
+            {state.base_down ? "RTK baz istasyonu KAPALI · aç" : "RTK baz istasyonu açık · kapat"}
+          </button>
+        )}
         <label className="auto">
           <input type="checkbox" checked={!!state?.auto} disabled={!state}
                  onChange={(e) => send({ cmd: "auto", on: e.target.checked })} />

@@ -58,11 +58,11 @@ INITIAL_PALLETS = ["GATE_1", "GATE_2", "GATE_3", "YARD_1", "YARD_2"]
 
 # Bolgeler (panel + kilitler): ad, gorunen ad, (cx, cy, sx, sy)
 ZONES = {
-    "inbound": ("Giris kapisi", (12.0, -15.6, 13.0, 6.0)),
-    "storage": ("Konteyner sahasi", (23.0, -1.0, 16.0, 5.6)),
+    "inbound": ("Giriş kapısı", (12.0, -15.6, 13.0, 6.0)),
+    "storage": ("Konteyner sahası", (23.0, -1.0, 16.0, 5.6)),
     "production": ("Konteyner doldurma", (43.5, -1.0, 6.0, 16.0)),
-    "outbound": ("Rihtim / gemi", (26.0, 15.6, 14.0, 5.6)),
-    "charge": ("Sarj", (0.0, 13.0, 2.6, 9.0)),
+    "outbound": ("Rıhtım / gemi", (26.0, 15.6, 14.0, 5.6)),
+    "charge": ("Şarj", (0.0, 13.0, 2.6, 9.0)),
 }
 
 # GNSS bolgeleri: bu dikdortgenlerde RTK en fazla bu kaliteye cikabilir

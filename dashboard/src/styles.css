@@ -135,6 +135,15 @@ button:disabled { cursor: not-allowed; opacity: 0.45; }
 .battery.mid .battery-fill { background: #d9a400; }
 .battery.low .battery-fill { background: var(--signal); }
 .battery span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 0.75rem; font-weight: 600; }
+.rtk { display: flex; flex-wrap: wrap; gap: 0.25rem 0.6rem; align-items: baseline; margin-top: 0.45rem;
+  padding: 0.3rem 0.55rem; border-radius: 6px; font-size: 0.8rem; background: #e7f6ec; color: #16653a; }
+.rtk b { font-family: var(--display); font-size: 0.95rem; letter-spacing: 0.02em; }
+.rtk-FLOAT { background: #fff4cc; color: #7a5a00; }
+.rtk-SINGLE { background: #ffe3cc; color: #8a3d00; }
+.rtk-NONE { background: #ffd9db; color: #9b1219; }
+.rtk-zone { color: inherit; opacity: 0.75; }
+.base { border: 1px solid #5d6b77; background: #2b3843; color: #eef1f3; border-radius: 6px; padding: 0.45rem 0.8rem; font-weight: 600; }
+.base.down { background: #8a5a00; border-color: #f2c200; }
 dl { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.4rem; margin: 0.6rem 0; }
 dl div { min-width: 0; }
 dt { font-size: 0.75rem; color: var(--ink-soft); }

@@ -12,7 +12,10 @@ const ZONES = [
 
 export default function FactoryMap({ state, plans, selection, onStation }) {
   const [meta, setMeta] = useState(null);
-  useEffect(() => { fetch("map.json").then((r) => r.json()).then(setMeta).catch(() => {}); }, []);
+  const mapName = state?.map || "map";
+  useEffect(() => {
+    fetch(`${mapName}.json`).then((r) => r.json()).then(setMeta).catch(() => {});
+  }, [mapName]);
   if (!meta) return <div className="map-empty">Harita yükleniyor</div>;
 
   const [ox, oy] = meta.origin;
@@ -22,23 +25,28 @@ export default function FactoryMap({ state, plans, selection, onStation }) {
   const Y = (y) => top - y;               // SVG ekseni asagi bakar, harita yukari
   const deg = (yaw) => (-yaw * 180) / Math.PI;
   const locks = state?.locks || {};
+  // Senaryo kendi bolgelerini gonderiyorsa (liman) onlari kullan, yoksa fabrika bolgeleri
+  const zones = state?.zones
+    ? Object.entries(state.zones).map(([key, z]) => ({
+        key, label: z.label, cx: z.rect[0], cy: z.rect[1], sx: z.rect[2], sy: z.rect[3] }))
+    : ZONES.map((z) => ({ ...z, label: ZONE_NAME[z.key] }));
   const robots = state?.robots || [];
 
   return (
     <svg className="map" viewBox={`${ox} 0 ${w} ${h}`} role="img" aria-label="Fabrika haritası">
       <rect x={ox} y={0} width={w} height={h} className="map-floor" />
-      {ZONES.map((z) => {
+      {zones.map((z) => {
         const owner = locks[z.key];
         return (
           <g key={z.key} className={`zone zone-${z.key}${owner ? " locked" : ""}`}>
             <rect x={z.cx - z.sx / 2} y={Y(z.cy + z.sy / 2)} width={z.sx} height={z.sy} rx={0.25} />
             {z.key !== "charge" && <text x={z.cx - z.sx / 2 + 0.3} y={Y(z.cy + z.sy / 2) + 0.75} className="zone-label">
-              {ZONE_NAME[z.key]}{owner ? `  ·  ${ROBOT_LABEL(owner)} çalışıyor` : ""}
+              {z.label}{owner ? `  ·  ${ROBOT_LABEL(owner)} çalışıyor` : ""}
             </text>}
           </g>
         );
       })}
-      <image href="map.png" x={ox} y={0} width={w} height={h} preserveAspectRatio="none" />
+      <image href={`${mapName}.png`} x={ox} y={0} width={w} height={h} preserveAspectRatio="none" />
 
       {(state?.stations || []).map((s) => {
         const sel = selection.pick === s.name ? "pick" : selection.drop === s.name ? "drop" : "";
